@@ -25,8 +25,11 @@ export const TIME_PERIODS = [
 export const MAP_LAYERS = [
   { key: 'trade', label: '贸易流量', default: true },
   { key: 'gdp', label: 'GDP密度', default: true },
+  { key: 'population', label: '人口热力', default: false },
+  { key: 'nightlight', label: '夜间灯光', default: false },
   { key: 'infra', label: '基础设施', default: false },
   { key: 'industry', label: '产业聚集', default: false },
+  { key: 'ftz', label: '自贸区', default: false },
   { key: 'risk', label: '政治风险', default: false },
   { key: 'climate', label: '气候风险', default: false },
 ]
@@ -65,6 +68,17 @@ export const MARKET_EXTENDED = {
         byType: [{ name: 'SUV', share: 38, growth: 12 }, { name: '轿车', share: 32, growth: -2 }, { name: 'MPV', share: 8, growth: 3 }],
         byPrice: [{ name: '豪华', share: 22, growth: 8 }, { name: '中高端', share: 45, growth: 5 }, { name: '经济型', share: 33, growth: -1 }],
         byPower: [{ name: '燃油', share: 52, growth: -8 }, { name: '混动', share: 28, growth: 18 }, { name: '纯电', share: 20, growth: 35 }],
+        byChannel: [
+          { name: '4S店/经销商', share: 44, growth: 2 },
+          { name: '平行进口', share: 10, growth: -3 },
+          { name: '线上渠道', share: 26, growth: 16 },
+          { name: 'B2B平台', share: 20, growth: 10 },
+        ],
+        sentiment: [
+          { topic: '价格敏感度', score: 74, trend: '上升', source: 'Euromonitor' },
+          { topic: '充电网络', score: 68, trend: '关注', source: '社媒情感' },
+          { topic: '品牌偏好', score: 62, trend: '稳定', source: '消费者调研' },
+        ],
         insights: ['纯电渗透率加速', '价格敏感度上升', '售后与充电网络成关键'],
       },
       machinery: {
@@ -1665,7 +1679,12 @@ export function buildDueDiligenceReport(name) {
 }
 
 export function getMarketHeatmapCells(extended, timelinePoint) {
-  const cells = extended?.heatmapCells || []
+  const cells = (extended?.heatmapCells || []).map((cell) => ({
+    ...cell,
+    population: cell.population ?? Math.round((cell.gdp || 50) * 0.92),
+    nightlight: cell.nightlight ?? Math.round((cell.trade || 50) * 0.88),
+    ftz: cell.ftz ?? Math.round(100 - (cell.risk || 40) * 0.6),
+  }))
   if (!timelinePoint || !extended?.timeline?.length) return cells
   const latest = extended.timeline[extended.timeline.length - 1]?.value || timelinePoint.value || 1
   const factor = timelinePoint.value / latest
@@ -1673,21 +1692,77 @@ export function getMarketHeatmapCells(extended, timelinePoint) {
     ...cell,
     trade: Math.round(cell.trade * (0.82 + factor * 0.18)),
     gdp: Math.round(cell.gdp * (0.85 + factor * 0.15)),
+    population: Math.round(cell.population * (0.88 + factor * 0.12)),
+    nightlight: Math.round(cell.nightlight * (0.86 + factor * 0.14)),
     risk: Math.round(cell.risk * (1.05 - factor * 0.05)),
     climate: Math.round(cell.climate * (0.9 + factor * 0.1)),
   }))
 }
 
-export function getMarketData(country, period) {
-  const legacyPeriod = ['1m', '6m', '1y'].includes(period) ? period : '6m'
-  const base = MARKET_DATA[country]?.[legacyPeriod] || MARKET_DATA.germany['6m']
-  const extended = MARKET_EXTENDED[country] || MARKET_EXTENDED.germany
-  return { ...base, extended, country, period }
+function resolvePeriodKey(period) {
+  if (period === '1d') return '1m'
+  if (period === '1q') return '6m'
+  if (period === '10y') return '1y'
+  return ['1m', '6m', '1y'].includes(period) ? period : '6m'
+}
+
+export function getMarketData(country, period, options = {}) {
+  const periodKey = resolvePeriodKey(period)
+  const base = MARKET_DATA[country]?.[periodKey] || MARKET_DATA.germany[periodKey] || MARKET_DATA.germany['6m']
+  const rawExtended = MARKET_EXTENDED[country] || MARKET_EXTENDED.germany
+
+  const trend = period === '1d'
+    ? ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'].map((month, i) => ({
+      month,
+      value: Math.round((base.trend?.[base.trend.length - 1]?.value || 80) * (0.78 + i * 0.04)),
+    }))
+    : period === '1q'
+      ? ['Q1', 'Q2', 'Q3', 'Q4'].map((month, i) => ({
+        month,
+        value: Math.round((base.trend?.[i]?.value || base.trend?.[0]?.value || 100) * (1 + i * 0.05)),
+      }))
+      : period === '10y'
+        ? (rawExtended.timeline || []).map((t) => ({ month: String(t.year), value: t.value }))
+        : base.trend
+
+  const overviewScale = period === '1d' ? 0.04 : period === '1q' ? 0.28 : period === '10y' ? 3.2 : period === '1y' ? 1 : period === '1m' ? 0.18 : 1
+
+  return {
+    ...base,
+    overview: {
+      ...base.overview,
+      marketSize: Math.round(base.overview.marketSize * overviewScale * 10) / 10,
+    },
+    trend,
+    extended: rawExtended,
+    country,
+    period,
+    periodKey,
+  }
 }
 
 export function getDemandSegments(country, category) {
   const ext = MARKET_EXTENDED[country] || MARKET_EXTENDED.germany
-  return ext.demandSegments?.[category] || ext.demandSegments?.vehicle || { byType: [], insights: [] }
+  const raw = ext.demandSegments?.[category] || ext.demandSegments?.vehicle || { byType: [], insights: [] }
+  return {
+    ...raw,
+    byPrice: raw.byPrice?.length ? raw.byPrice : [
+      { name: '豪华', share: 22, growth: 8 },
+      { name: '中高端', share: 45, growth: 5 },
+      { name: '经济型', share: 33, growth: -1 },
+    ],
+    byChannel: raw.byChannel?.length ? raw.byChannel : [
+      { name: '4S店/经销商', share: 42, growth: 3 },
+      { name: '平行进口', share: 12, growth: -2 },
+      { name: '线上渠道', share: 28, growth: 18 },
+      { name: 'B2B平台', share: 18, growth: 12 },
+    ],
+    sentiment: raw.sentiment || [
+      { topic: '价格敏感度', score: 70, trend: '上升', source: 'GlobalData' },
+      { topic: '品牌偏好', score: 64, trend: '稳定', source: '消费者调研' },
+      { topic: '功能体验', score: 78, trend: '上升', source: '电商评论' },
+    ],
+  }
 }
 
 export const FORECAST_HORIZONS = [

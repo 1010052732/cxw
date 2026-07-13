@@ -3,8 +3,11 @@
 export const MAP_LAYER_META = {
   trade: { label: '贸易流量', color: '#1677ff', channel: 'blue' },
   gdp: { label: 'GDP密度', color: '#B32620', channel: 'brand' },
+  population: { label: '人口热力', color: '#eb2f96', channel: 'magenta' },
+  nightlight: { label: '夜间灯光', color: '#fadb14', channel: 'yellow' },
   infra: { label: '基础设施', color: '#13c2c2', channel: 'cyan' },
   industry: { label: '产业聚集', color: '#d48806', channel: 'gold' },
+  ftz: { label: '自贸区', color: '#52c41a', channel: 'success' },
   risk: { label: '政治风险', color: '#faad14', channel: 'warning' },
   climate: { label: '气候风险', color: '#722ed1', channel: 'purple' },
   score: { label: '综合评分', color: '#B32620', channel: 'brand' },
@@ -20,6 +23,8 @@ const CHANNEL_RGB = {
   warning: [250, 173, 20],
   purple: [114, 46, 209],
   success: [82, 196, 26],
+  magenta: [235, 47, 150],
+  yellow: [250, 219, 20],
 }
 
 export function clampScore(value) {
