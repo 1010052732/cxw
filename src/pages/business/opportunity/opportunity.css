@@ -686,7 +686,7 @@
 
 @media print {
   .main-layout-header,
-  .app-logo,
+  .header-brand,
   .ant-layout-sider,
   .report-toolbar,
   .no-print {

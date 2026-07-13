@@ -580,7 +580,7 @@ export default function OpportunityEvaluationPage() {
           <Button onClick={() => navigate('/opportunity/classify?tab=mine')}>我的商机</Button>
           <Button type="primary" onClick={() => navigate('/opportunity/report/generate')}>生成评估报告 →</Button>
         </Space>
-        <h1 className="page-title">商机评估与排序</h1>
+        <h1 className="page-title">商机评估</h1>
         <p className="page-description">指标设置 → 量化评估 → 多维对比 → 智能排序 · 算法建议 + 人工判断</p>
       </div>
 

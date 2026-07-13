@@ -559,7 +559,7 @@ export default function OpportunityClassifyPage() {
   return (
     <div className="opportunity-page">
       <div className="opportunity-page-header">
-        <h1 className="page-title">商机分类与筛选</h1>
+        <h1 className="page-title">商机分类</h1>
         <p className="page-description">先分清、再筛优 — 分类规则 · 筛选配置 · 商机列表 · 我的商机 · 送评估排序</p>
       </div>
 

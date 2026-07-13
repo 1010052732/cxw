@@ -25,8 +25,8 @@ const rawMenuItems = [
     icon: <FundProjectionScreenOutlined />,
     label: '商机识别',
     children: [
-      { key: '/opportunity/classify', label: '商机分类与筛选' },
-      { key: '/opportunity/evaluation', label: '商机评估与排序' },
+      { key: '/opportunity/classify', label: '商机分类' },
+      { key: '/opportunity/evaluation', label: '商机评估' },
       { key: '/opportunity/report/generate', label: '评估报告' },
     ],
   },
@@ -117,9 +117,9 @@ function getOpenKeys(pathname) {
 function getPageTitle(pathname) {
   const titles = {
     '/home': '首页',
-    '/opportunity/classify': '商机分类与筛选',
+    '/opportunity/classify': '商机分类',
     '/opportunity/hall': '商机大厅',
-    '/opportunity/evaluation': '商机评估与排序',
+    '/opportunity/evaluation': '商机评估',
     '/analysis/market': '市场分析',
     '/analysis/product': '商品分析',
     '/analysis/enterprise': '企业分析',
@@ -181,25 +181,12 @@ export default function MainLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider width={220} theme="dark" breakpoint="lg" collapsedWidth={64}>
-        <div className="app-logo">
-          <img src="/platform-logo.png" alt="数智分析平台" className="app-logo-image" />
-          <span className="app-logo-text">{t('platform')}</span>
+      <Header className="main-layout-header" style={{ background: '#001529' }}>
+        <div className="header-brand">
+          <img src="/platform-logo.png" alt="数智分析平台" className="header-brand-image" />
+          <span className="header-brand-text">{t('platform')}</span>
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={selectedKeys}
-          openKeys={openKeys}
-          onOpenChange={setOpenKeys}
-          items={menuItems}
-          onClick={({ key }) => {
-            if (key.startsWith('/')) navigate(key)
-          }}
-        />
-      </Sider>
-      <Layout>
-        <Header className="main-layout-header">
+        <div className="header-main">
           <span className="header-title">{pageTitle}</span>
           <Space size="middle" className="header-toolbar">
             <Tag color="volcano">{dataScopeLabel}</Tag>
@@ -227,10 +214,28 @@ export default function MainLayout() {
               </Space>
             </Dropdown>
           </Space>
-        </Header>
-        <Content className="main-layout-content">
-          <Outlet />
-        </Content>
+        </div>
+      </Header>
+      <Layout>
+        <Sider width={340} theme="dark" className="main-layout-sider">
+          <Menu
+            theme="dark"
+            mode="inline"
+            className="main-layout-menu"
+            selectedKeys={selectedKeys}
+            openKeys={openKeys}
+            onOpenChange={setOpenKeys}
+            items={menuItems}
+            onClick={({ key }) => {
+              if (key.startsWith('/')) navigate(key)
+            }}
+          />
+        </Sider>
+        <Layout>
+          <Content className="main-layout-content">
+            <Outlet />
+          </Content>
+        </Layout>
       </Layout>
     </Layout>
   )
