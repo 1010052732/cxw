@@ -1,3 +1,4 @@
+import './utils/initAmapSecurity.js'
 import { ConfigProvider, App as AntApp } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import { StrictMode } from 'react'

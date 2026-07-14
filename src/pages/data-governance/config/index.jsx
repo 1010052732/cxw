@@ -32,6 +32,7 @@ import {
   getQuotaPercent,
   getStatusTag,
   getTypeLabel,
+  isFreeOrInternalSource,
   isQuotaWarning,
 } from '../../../mock/data-governance'
 import { formatModuleTags, getDownstreamConsumption, getPlatformMetrics, getSourceFeed } from '../../../mock/data-bridge'
@@ -92,6 +93,11 @@ export default function DataConfigPage() {
   }
 
   const handleDelete = (id) => {
+    const target = dataSources.find((item) => item.id === id)
+    if (target && isFreeOrInternalSource(target)) {
+      message.warning('免费/内部数据源不可删除，仅支持启停')
+      return
+    }
     setDataSources((prev) => prev.filter((item) => item.id !== id))
     message.success('数据源已删除')
   }
@@ -105,6 +111,10 @@ export default function DataConfigPage() {
   }
 
   const openEdit = (record) => {
+    if (isFreeOrInternalSource(record)) {
+      message.info('免费/内部数据源配置为只读，仅可启停采集')
+      return
+    }
     setEditingRecord(record)
     form.setFieldsValue(record)
     setModalOpen(true)
@@ -130,6 +140,10 @@ export default function DataConfigPage() {
         failRate: 0,
       }
       if (editingRecord) {
+        if (isFreeOrInternalSource(editingRecord)) {
+          message.warning('免费/内部数据源不可修改')
+          return
+        }
         setDataSources((prev) =>
           prev.map((item) => (item.id === editingRecord.id ? { ...item, ...base } : item)),
         )
@@ -159,7 +173,12 @@ export default function DataConfigPage() {
       key: 'name',
       width: 170,
       ellipsis: true,
-      render: (text) => <Tooltip title={text}>{text}</Tooltip>,
+      render: (text, record) => (
+        <Space size={4}>
+          <Tooltip title={text}>{text}</Tooltip>
+          {isFreeOrInternalSource(record) && <Tag color="default">只读</Tag>}
+        </Space>
+      ),
     },
     {
       title: '来源分类',
@@ -241,16 +260,27 @@ export default function DataConfigPage() {
       key: 'action',
       width: 220,
       fixed: 'right',
-      render: (_, record) => (
-        <Space size={4}>
-          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => { setViewRecord(record); setDrawerOpen(true) }}>详情</Button>
-          <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
-          <Button type="link" size="small" onClick={() => handleTest(record)}>测试</Button>
-          <Popconfirm title="确认删除该数据源？" onConfirm={() => handleDelete(record.id)}>
-            <Button type="link" size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_, record) => {
+        const readOnly = isFreeOrInternalSource(record)
+        return (
+          <Space size={4}>
+            <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => { setViewRecord(record); setDrawerOpen(true) }}>详情</Button>
+            <Tooltip title={readOnly ? '免费/内部数据源不可编辑' : undefined}>
+              <Button type="link" size="small" disabled={readOnly} onClick={() => openEdit(record)}>编辑</Button>
+            </Tooltip>
+            <Button type="link" size="small" onClick={() => handleTest(record)}>测试</Button>
+            {readOnly ? (
+              <Tooltip title="免费/内部数据源不可删除">
+                <Button type="link" size="small" danger icon={<DeleteOutlined />} disabled />
+              </Tooltip>
+            ) : (
+              <Popconfirm title="确认删除该数据源？" onConfirm={() => handleDelete(record.id)}>
+                <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            )}
+          </Space>
+        )
+      },
     },
   ]
 
@@ -432,9 +462,19 @@ export default function DataConfigPage() {
         </Form>
       </Modal>
 
-      <Drawer title="数据源详情" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={560}>
+      <Drawer
+        title={viewRecord ? `数据源详情${isFreeOrInternalSource(viewRecord) ? ' · 只读' : ''}` : '数据源详情'}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        width={560}
+      >
         {viewRecord && (
           <>
+            {isFreeOrInternalSource(viewRecord) && (
+              <div style={{ marginBottom: 12, color: '#8c8c8c', fontSize: 13 }}>
+                该数据源为免费/内部接入，配置由平台预置，仅支持启停采集。
+              </div>
+            )}
             <Descriptions bordered column={2} size="small">
               <Descriptions.Item label="编号">{viewRecord.id}</Descriptions.Item>
               <Descriptions.Item label="分类">{getCategoryLabel(viewRecord.category)}</Descriptions.Item>

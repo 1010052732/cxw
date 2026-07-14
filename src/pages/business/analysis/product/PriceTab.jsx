@@ -78,10 +78,16 @@ export default function PriceTab({ productName, onGoSupply }) {
       notification.warning({
         message: '价格预警触发',
         description: alertCheck.reasons[0]?.msg,
-        duration: 6,
+        placement: 'topRight',
       })
     }
-  }, [productName, alertCheck.triggered, alertCheck.reasons, alertSettings.enabled, notification])
+  }, [alertCheck.triggered, alertSettings.enabled])
+
+  // 文档要求：单周涨跌幅超过8%时一键/自动生成归因报告
+  useEffect(() => {
+    const change = Math.abs(parseFloat(String(price.attribution?.change || price.dailyChange || 0)))
+    if (change >= 8) setShowAttribution(true)
+  }, [price.attribution?.change, price.dailyChange, productName])
 
   const trendCompareData = useMemo(() => {
     const spot = price.multiLine?.filter((d) => d.series === '现货') || []

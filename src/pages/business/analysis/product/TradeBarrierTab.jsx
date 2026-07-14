@@ -23,11 +23,13 @@ import {
 } from '@ant-design/icons'
 import {
   BARRIER_COUNTRY_OPTIONS,
+  BARRIER_TYPE_OPTIONS,
   MARKET_COUNTRIES,
   calcBarrierCost,
   getProductDetail,
   getTradeBarrierData,
 } from '../../../../mock/analysis'
+import { downloadTextFile, exportCsv } from '../analysisExport'
 
 const { Text, Paragraph } = Typography
 
@@ -39,28 +41,35 @@ export default function TradeBarrierTab({ productName }) {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [country, setCountry] = useState('all')
+  const [barrierType, setBarrierType] = useState('all')
   const [cargoValue, setCargoValue] = useState(100)
   const [origin, setOrigin] = useState('中国')
+  const [targetMarket, setTargetMarket] = useState('德国')
   const [selectedRoute, setSelectedRoute] = useState(null)
 
   const product = useMemo(() => getProductDetail(productName), [productName])
-  const data = useMemo(() => getTradeBarrierData(productName, country), [productName, country])
+  const data = useMemo(() => getTradeBarrierData(productName, country === 'all' ? targetMarket : country), [productName, country, targetMarket])
+  const filteredBarriers = useMemo(() => {
+    if (barrierType === 'all') return data.barriers
+    return (data.barriers || []).filter((b) => b.type === barrierType)
+  }, [data.barriers, barrierType])
 
   const routeCompare = useMemo(
     () => data.routes.map((r) => {
-      const cost = calcBarrierCost(cargoValue, r)
-      return { ...r, totalCost: cost.total, totalRate: r.total }
+      const cost = calcBarrierCost(cargoValue, r, { origin, targetMarket, barriers: data.barriers })
+      return { ...r, totalCost: cost.total, totalRate: cost.rateTotal, ftaApplied: cost.ftaApplied }
     }),
-    [data.routes, cargoValue],
+    [data.routes, data.barriers, cargoValue, origin, targetMarket],
   )
 
   const activeRoute = selectedRoute || routeCompare[0]
   const costDetail = useMemo(
-    () => (activeRoute ? calcBarrierCost(cargoValue, activeRoute) : null),
-    [activeRoute, cargoValue],
+    () => (activeRoute ? calcBarrierCost(cargoValue, activeRoute, { origin, targetMarket, barriers: data.barriers }) : null),
+    [activeRoute, cargoValue, origin, targetMarket, data.barriers],
   )
 
   const compareChart = routeCompare.map((r) => ({ name: r.name, value: r.totalCost, rate: r.totalRate }))
+  const marketCountryValue = MARKET_COUNTRIES.find((c) => c.label === targetMarket)?.value || 'germany'
 
   return (
     <>
@@ -70,10 +79,34 @@ export default function TradeBarrierTab({ productName }) {
           <Tag color="processing">{productName}</Tag>
           <Text>HS {product.codes?.hs || product.hsCode}</Text>
           <Select value={country} style={{ width: 120 }} options={BARRIER_COUNTRY_OPTIONS} onChange={setCountry} />
+          <Select
+            value={barrierType}
+            style={{ width: 140 }}
+            options={[{ value: 'all', label: '全部壁垒类型' }, ...(BARRIER_TYPE_OPTIONS || []).map((t) => ({ value: t, label: t }))]}
+            onChange={setBarrierType}
+          />
         </Space>
         <Space>
-          <Button icon={<CloudDownloadOutlined />} onClick={() => message.success('壁垒清单已导出')}>导出</Button>
-          <Button type="link" icon={<GlobalOutlined />} onClick={() => navigate('/analysis/market?tab=policy')}>关联政策解读</Button>
+          <Button
+            icon={<CloudDownloadOutlined />}
+            onClick={() => {
+              exportCsv(
+                `trade-barriers-${productName}.csv`,
+                ['country', 'type', 'desc', 'law', 'status', 'rate', 'exemption', 'originRule'],
+                filteredBarriers,
+              )
+              message.success('壁垒清单已导出')
+            }}
+          >
+            导出
+          </Button>
+          <Button
+            type="link"
+            icon={<GlobalOutlined />}
+            onClick={() => navigate(`/analysis/market?tab=policy&country=${marketCountryValue}&hs=${product.codes?.hs || product.hsCode || '8708'}`)}
+          >
+            关联政策解读
+          </Button>
         </Space>
       </div>
 
@@ -83,7 +116,7 @@ export default function TradeBarrierTab({ productName }) {
           rowKey={(r) => `${r.country}-${r.type}-${r.desc}`}
           size="small"
           pagination={false}
-          dataSource={data.barriers}
+          dataSource={filteredBarriers}
           columns={[
             { title: '国家', dataIndex: 'country', key: 'country', width: 80 },
             { title: '类型', dataIndex: 'type', key: 'type', width: 80, render: (v) => <Tag color={BARRIER_TYPE_COLOR[v] || 'default'}>{v}</Tag> },
@@ -109,7 +142,15 @@ export default function TradeBarrierTab({ productName }) {
                 <Select value={origin} style={{ width: 100 }} options={[{ value: '中国', label: '中国' }, { value: '越南', label: '越南' }, { value: '东盟', label: '东盟' }]} onChange={setOrigin} />
               </Form.Item>
               <Form.Item label="目标市场">
-                <Select style={{ width: 100 }} options={MARKET_COUNTRIES.map((c) => ({ value: c.label, label: c.label }))} defaultValue="德国" />
+                <Select
+                  value={targetMarket}
+                  style={{ width: 100 }}
+                  options={MARKET_COUNTRIES.map((c) => ({ value: c.label, label: c.label }))}
+                  onChange={(v) => {
+                    setTargetMarket(v)
+                    setSelectedRoute(null)
+                  }}
+                />
               </Form.Item>
             </Form>
             <Table
@@ -127,7 +168,8 @@ export default function TradeBarrierTab({ productName }) {
                 { title: '关税%', dataIndex: 'tariff', key: 'tariff', width: 70 },
                 { title: '增值税%', dataIndex: 'vat', key: 'vat', width: 70 },
                 { title: '代理费%', dataIndex: 'agency', key: 'agency', width: 70 },
-                { title: '综合费率%', dataIndex: 'total', key: 'total', width: 90 },
+                { title: '综合费率%', dataIndex: 'totalRate', key: 'totalRate', width: 90 },
+                { title: 'FTA', dataIndex: 'ftaApplied', key: 'ftaApplied', width: 70, render: (v) => v ? <Tag color="success">适用</Tag> : <Tag>标准</Tag> },
                 { title: '到岸成本(万)', dataIndex: 'totalCost', key: 'totalCost', width: 100, render: (v) => <Text strong style={{ color: '#B32620' }}>{v}</Text> },
               ]}
             />
@@ -149,10 +191,11 @@ export default function TradeBarrierTab({ productName }) {
                 <Descriptions.Item label="到岸总成本">
                   <Text strong style={{ color: '#B32620', fontSize: 18 }}>{costDetail.total} 万元</Text>
                 </Descriptions.Item>
+                <Descriptions.Item label="测算说明">{costDetail.note}</Descriptions.Item>
               </Descriptions>
             )}
             <Paragraph type="secondary" style={{ marginTop: 12 }}>
-              支持自贸协定原产地证书、转口贸易等多方案税费对比，帮助企业选择最优贸易路径。
+              支持自贸协定原产地证书、转口贸易等多方案税费对比；切换原产地/目标市场后成本将自动重算。
             </Paragraph>
           </div>
         </Col>
@@ -185,7 +228,31 @@ export default function TradeBarrierTab({ productName }) {
                 title: '操作',
                 key: 'action',
                 width: 80,
-                render: () => <Button type="link" size="small" onClick={() => message.success('模板已下载')}>下载</Button>,
+                render: (_, row) => (
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={() => {
+                      const template = [
+                        `清关文件准备清单 · ${row.doc}`,
+                        `商品：${productName} · HS ${product.codes?.hs || product.hsCode || '-'}`,
+                        `目标市场：${targetMarket}`,
+                        '',
+                        '□ 文件名称已核对',
+                        '□ 语言版本符合要求',
+                        `□ ${row.required ? '必需文件已备齐' : '可选文件已评估'}`,
+                        '□ 签章/认证已完成',
+                        '□ 副本份数符合海关要求',
+                        '',
+                        '备注：',
+                      ].join('\n')
+                      downloadTextFile(`${row.doc}-template.txt`, template, 'text/plain;charset=utf-8')
+                      message.success('模板已下载')
+                    }}
+                  >
+                    下载
+                  </Button>
+                ),
               },
             ]} />
           </div>
@@ -193,7 +260,9 @@ export default function TradeBarrierTab({ productName }) {
       </Row>
 
       <div className="business-filter-bar" style={{ justifyContent: 'center' }}>
-        <Button type="primary" onClick={() => navigate('/analysis/enterprise')}>进入企业分析 →</Button>
+        <Button type="primary" onClick={() => navigate(`/analysis/enterprise?tab=partner&q=${encodeURIComponent('华贸进出口集团')}`)}>
+          进入企业分析 · 伙伴评估 →
+        </Button>
       </div>
     </>
   )

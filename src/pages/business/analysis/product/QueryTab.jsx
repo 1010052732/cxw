@@ -4,6 +4,7 @@ import {
   App,
   Button,
   Card,
+  Checkbox,
   Col,
   Descriptions,
   Form,
@@ -31,8 +32,11 @@ import {
   TRADE_MODE_OPTIONS,
   calcLandedCost,
   getProductDetail,
+  resolveMarketCountryValue,
+  resolveProductByRelatedName,
   semanticSearchProducts,
 } from '../../../../mock/analysis'
+import { exportCsv } from '../analysisExport'
 
 const { Text, Paragraph } = Typography
 
@@ -59,9 +63,38 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
   const [filters, setFilters] = useState({ tradeMode: 'all', origin: 'all', targetMarket: 'all' })
   const [cargoValue, setCargoValue] = useState(100)
   const [searched, setSearched] = useState(true)
+  const [compareKeys, setCompareKeys] = useState([])
 
   const results = useMemo(() => (searched ? semanticSearchProducts(query, filters) : []), [query, filters, searched])
-  const activeName = results[0]?.name || productName
+  const compareRows = useMemo(
+    () => compareKeys.map((name) => {
+      const p = getProductDetail(name)
+      return {
+        key: name,
+        name,
+        hs: p.codes?.hs || p.hsCode || '-',
+        tradeIndex: p.archive?.tradeIndex ?? '-',
+        priceAvg: p.archive?.priceRange?.avg ?? '-',
+        volatility: p.archive?.priceRange?.volatility ?? '-',
+      }
+    }),
+    [compareKeys],
+  )
+
+  const toggleCompare = (name, checked) => {
+    setCompareKeys((prev) => {
+      if (checked) {
+        if (prev.includes(name)) return prev
+        if (prev.length >= 3) {
+          message.warning('最多对比 3 个商品')
+          return prev
+        }
+        return [...prev, name]
+      }
+      return prev.filter((k) => k !== name)
+    })
+  }
+  const activeName = productName
   const product = useMemo(() => getProductDetail(activeName), [activeName])
   const costResult = useMemo(() => calcLandedCost(cargoValue, product.costParams), [cargoValue, product])
 
@@ -101,7 +134,20 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
           <Select value={filters.tradeMode} style={{ width: 130 }} options={TRADE_MODE_OPTIONS} onChange={(v) => setFilters((p) => ({ ...p, tradeMode: v }))} />
           <Select value={filters.origin} style={{ width: 120 }} options={[{ value: 'all', label: '全部原产地' }, { value: '中国', label: '中国' }, { value: '德国', label: '德国' }]} onChange={(v) => setFilters((p) => ({ ...p, origin: v }))} />
           <Select value={filters.targetMarket} style={{ width: 120 }} options={[{ value: 'all', label: '全部市场' }, ...MARKET_COUNTRIES.map((c) => ({ value: c.label, label: c.label }))]} onChange={(v) => setFilters((p) => ({ ...p, targetMarket: v }))} />
-          <Button icon={<CloudDownloadOutlined />} onClick={() => message.success('商品档案已导出')}>导出</Button>
+          <Button
+            icon={<CloudDownloadOutlined />}
+            onClick={() => {
+              exportCsv(`product-archive-${product.name}.csv`, ['field', 'value'], [
+                { field: '名称', value: product.name },
+                { field: 'HS', value: product.codes?.hs || product.hsCode },
+                { field: '物理属性', value: product.archive?.physical },
+                { field: '贸易活跃度', value: product.archive?.tradeIndex },
+              ])
+              message.success('商品档案 CSV 已下载')
+            }}
+          >
+            导出
+          </Button>
         </Space>
       </div>
 
@@ -117,11 +163,45 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
                 className={activeName === r.name ? 'forecast-scenario-active' : ''}
                 onClick={() => { onProductChange(r.name); setQuery(r.name) }}
               >
-                <Text strong>{r.name}</Text>
-                <div><Tag>HS {r.hsCode}</Tag><Tag color="blue">{r.confidence}%</Tag></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                  <div>
+                    <Text strong>{r.name}</Text>
+                    <div><Tag>HS {r.hsCode}</Tag><Tag color="blue">{r.confidence}%</Tag></div>
+                  </div>
+                  <Checkbox
+                    checked={compareKeys.includes(r.name)}
+                    disabled={!compareKeys.includes(r.name) && compareKeys.length >= 3}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => toggleCompare(r.name, e.target.checked)}
+                  >
+                    对比
+                  </Checkbox>
+                </div>
               </Card>
             ))}
           </Space>
+        </div>
+      )}
+
+      {compareKeys.length >= 2 && (
+        <div className="business-panel">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 className="business-panel-title" style={{ margin: 0 }}>多商品对比</h3>
+            <Button size="small" onClick={() => setCompareKeys([])}>清空对比</Button>
+          </div>
+          <Table
+            size="small"
+            pagination={false}
+            rowKey="key"
+            dataSource={compareRows}
+            columns={[
+              { title: '商品名称', dataIndex: 'name', key: 'name' },
+              { title: 'HS编码', dataIndex: 'hs', key: 'hs', width: 100 },
+              { title: '贸易活跃度', dataIndex: 'tradeIndex', key: 'tradeIndex', width: 100 },
+              { title: '10年均价', dataIndex: 'priceAvg', key: 'priceAvg', width: 100 },
+              { title: '波动系数', dataIndex: 'volatility', key: 'volatility', width: 90 },
+            ]}
+          />
         </div>
       )}
 
@@ -136,7 +216,10 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
               <Col xs={24} md={8}>
                 <div className="product-archive-visual">
                   <div className="product-archive-icon">{product.category?.slice(0, 2)}</div>
-                  <Text type="secondary">3D模型预览（Mock）</Text>
+                  <Text type="secondary">3D模型预览（可旋转示意）</Text>
+                  <div className="product-3d-mock" aria-hidden>
+                    <div className="product-3d-cube" />
+                  </div>
                   <div style={{ marginTop: 8 }}><Tag>贸易活跃度 {product.archive?.tradeIndex}</Tag></div>
                 </div>
               </Col>
@@ -148,6 +231,20 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
                   <Descriptions.Item label="10年均价">{product.archive?.priceRange?.avg} 指数</Descriptions.Item>
                   <Descriptions.Item label="波动系数">{product.archive?.priceRange?.volatility}</Descriptions.Item>
                 </Descriptions>
+                {(product.archive?.priceHistory10y || []).length > 0 && (
+                  <Table
+                    size="small"
+                    pagination={false}
+                    style={{ marginTop: 8 }}
+                    rowKey="year"
+                    dataSource={product.archive.priceHistory10y}
+                    columns={[
+                      { title: '年份', dataIndex: 'year', key: 'year', width: 70 },
+                      { title: '均价指数', dataIndex: 'price', key: 'price', width: 90 },
+                      { title: '贸易指数', key: 'trade', render: (_, r) => product.archive.tradeIndex10y?.find((t) => t.year === r.year)?.index ?? '—' },
+                    ]}
+                  />
+                )}
               </Col>
             </Row>
 
@@ -176,7 +273,19 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
                   dataSource={product.archive?.consumers || []}
                   columns={[
                     { title: '排名', dataIndex: 'rank', key: 'rank', width: 50 },
-                    { title: '国家', dataIndex: 'country', key: 'country' },
+                    {
+                      title: '国家',
+                      dataIndex: 'country',
+                      key: 'country',
+                      render: (v) => {
+                        const code = resolveMarketCountryValue(v)
+                        return code ? (
+                          <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/analysis/market?country=${code}&tab=overview`)}>
+                            {v}
+                          </Button>
+                        ) : v
+                      },
+                    },
                     { title: '需求特征', dataIndex: 'feature', key: 'feature' },
                   ]}
                 />
@@ -204,9 +313,19 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
       <Row gutter={16}>
         <Col xs={24} lg={12}>
           <div className="business-panel">
-            <h3 className="business-panel-title">TOP 生产商</h3>
-            <Table rowKey="name" size="small" pagination={false} dataSource={product.archive?.producers || []} columns={[
-              { title: '企业', dataIndex: 'name', key: 'name' },
+            <h3 className="business-panel-title">TOP 生产商（全球产能排名）</h3>
+            <Table rowKey="name" size="small" pagination={{ pageSize: 5, showTotal: (t) => `共 ${t} 家` }} dataSource={product.archive?.producers || []} columns={[
+              { title: '排名', key: 'rank', width: 50, render: (_, __, i) => i + 1 },
+              {
+                title: '企业',
+                dataIndex: 'name',
+                key: 'name',
+                render: (v) => (
+                  <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/analysis/enterprise?q=${encodeURIComponent(v)}&tab=query`)}>
+                    {v}
+                  </Button>
+                ),
+              },
               { title: '国家', dataIndex: 'country', key: 'country', width: 70 },
               { title: '产能', dataIndex: 'capacity', key: 'capacity' },
             ]} />
@@ -250,12 +369,27 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
           {RELATED_TYPES.map(({ key, label, color }) => (
             <Col xs={24} sm={12} lg={6} key={key}>
               <Card size="small" title={<Tag color={color}>{label}</Tag>}>
-                {(product.related?.[key] || []).map((item) => (
-                  <div key={item.name} style={{ marginBottom: 8, padding: '6px 0', borderBottom: '1px solid #f0f0f0' }}>
-                    <Text>{item.name}</Text>
-                    <div><Tag>热度 {item.heat}</Tag><Tag color="success">利润 {item.margin}</Tag></div>
-                  </div>
-                ))}
+                {(product.related?.[key] || []).map((item) => {
+                  const mapped = resolveProductByRelatedName(item.name)
+                  return (
+                    <div
+                      key={item.name}
+                      style={{ marginBottom: 8, padding: '6px 0', borderBottom: '1px solid #f0f0f0', cursor: mapped ? 'pointer' : 'default' }}
+                      onClick={() => {
+                        if (!mapped) {
+                          message.info(`${item.name} 暂未建立独立商品档案，已保留推荐信息`)
+                          return
+                        }
+                        onProductChange(mapped)
+                        setQuery(mapped)
+                        message.success(`已切换至关联商品：${mapped}`)
+                      }}
+                    >
+                      <Text>{item.name}</Text>
+                      <div><Tag>热度 {item.heat}</Tag><Tag color="success">利润 {item.margin}</Tag>{mapped && <Tag color="processing">可下钻</Tag>}</div>
+                    </div>
+                  )
+                })}
               </Card>
             </Col>
           ))}
@@ -297,7 +431,15 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
         <Space wrap>
           <Button type="primary" icon={<LineChartOutlined />} onClick={onGoPrice}>价格走势 →</Button>
           {onGoSupply && <Button icon={<SwapOutlined />} onClick={onGoSupply}>供求关系研究 →</Button>}
-          <Button icon={<ExportOutlined />} onClick={() => navigate('/analysis/market')}>关联市场分析</Button>
+          <Button
+            icon={<ExportOutlined />}
+            onClick={() => {
+              const market = filters.targetMarket !== 'all' ? resolveMarketCountryValue(filters.targetMarket) : 'germany'
+              navigate(`/analysis/market?country=${market || 'germany'}&tab=overview`)
+            }}
+          >
+            关联市场分析
+          </Button>
         </Space>
         <Button icon={<ApiOutlined />} onClick={() => message.success('已推送商品档案至 ERP（Mock）')}>API 推送</Button>
       </div>

@@ -962,6 +962,12 @@ export function isQuotaWarning(used, quota, threshold) {
   return getQuotaPercent(used, quota) >= threshold
 }
 
+/** 免费或企业内部数据源：配置只读，仅允许启停 */
+export function isFreeOrInternalSource(record) {
+  if (!record) return false
+  return record.category === 'internal' || !record.paidApi
+}
+
 export function getLogStatusTag(status) {
   const map = {
     success: { color: 'success', text: '成功' },

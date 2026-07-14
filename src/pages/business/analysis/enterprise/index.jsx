@@ -10,6 +10,7 @@ import {
   TeamOutlined,
   TrophyOutlined,
 } from '@ant-design/icons'
+import AnalysisWorkflowBar from '../AnalysisWorkflowBar'
 import EnterpriseQueryTab from './QueryTab'
 import CompetitorTab from './CompetitorTab'
 import PartnerTab from './PartnerTab'
@@ -49,6 +50,15 @@ export default function AnalysisEnterprisePage() {
         <p className="page-description">信息查询 → 竞争分析 → 伙伴评估 → 标杆对比 · 洲/国家/城市三级筛选 · 支撑合作与竞争决策</p>
       </div>
 
+      <AnalysisWorkflowBar
+        active="enterprise"
+        context={{
+          q: enterpriseName,
+          country: searchParams.get('country') || undefined,
+          tab: activeTab,
+        }}
+      />
+
       <div className="business-filter-bar">
         <Space wrap>
           <Text>快捷企业</Text>
@@ -63,8 +73,8 @@ export default function AnalysisEnterprisePage() {
           <Button type="link" size="small" onClick={() => changeTab('competitor')}>竞争</Button>
           <Button type="link" size="small" onClick={() => changeTab('partner')}>伙伴</Button>
           <Button type="link" size="small" onClick={() => changeTab('benchmark')}>标杆</Button>
-          <Button type="link" icon={<ShopOutlined />} onClick={() => navigate('/analysis/product')}>商品分析</Button>
-          <Button type="link" icon={<GlobalOutlined />} onClick={() => navigate('/analysis/market')}>市场分析</Button>
+          <Button type="link" icon={<ShopOutlined />} onClick={() => navigate(`/analysis/product?q=${encodeURIComponent('汽车配件')}&tab=query`)}>商品分析</Button>
+          <Button type="link" icon={<GlobalOutlined />} onClick={() => navigate('/analysis/market?country=germany&tab=overview')}>市场分析</Button>
         </Space>
       </div>
 

@@ -761,11 +761,204 @@
 
 .market-map-canvas {
   position: relative;
-  height: 360px;
-  background: linear-gradient(180deg, #e6f4ff 0%, #f6ffed 50%, #fff7e6 100%);
+  height: 420px;
+  background: #f5f5f5;
   border: 1px solid #f0f0f0;
   border-radius: 8px;
   overflow: hidden;
+}
+
+.market-amap-canvas {
+  background: #e8eef5;
+}
+
+.market-amap-container {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+}
+
+.market-amap-loading,
+.market-amap-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.market-amap-fallback {
+  align-items: flex-start;
+  overflow-y: auto;
+}
+
+.market-amap-empty-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.amap-market-info {
+  min-width: 140px;
+  padding: 8px 10px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.amap-market-info .amap-info-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #262626;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 4px;
+}
+
+.amap-market-info .amap-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #595959;
+}
+
+.amap-market-info .amap-info-row strong {
+  color: #B32620;
+}
+
+.amap-infra-marker,
+.amap-overlay-marker {
+  font-size: 18px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  cursor: default;
+}
+
+.amap-market-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.amap-market-marker .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #B32620;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.amap-market-marker.active .dot,
+.amap-market-marker.highlight .dot {
+  width: 18px;
+  height: 18px;
+  background: #faad14;
+  box-shadow: 0 0 0 3px rgba(250, 173, 20, 0.35);
+}
+
+.amap-market-marker .label {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #262626;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.amap-infra-marker,
+.amap-overlay-marker {
+  font-size: 18px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.amap-overlay-marker.layer-disaster {
+  background: #fff1f0;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.market-leaflet-canvas {
+  background: #e8eef5;
+}
+
+.market-leaflet-container {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  z-index: 1;
+}
+
+.market-leaflet-container .leaflet-control-attribution {
+  font-size: 10px;
+}
+
+.leaflet-market-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.leaflet-market-marker .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #B32620;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.leaflet-market-marker.active .dot,
+.leaflet-market-marker.highlight .dot {
+  width: 18px;
+  height: 18px;
+  background: #faad14;
+  box-shadow: 0 0 0 3px rgba(250, 173, 20, 0.35);
+}
+
+.leaflet-market-marker .label {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #262626;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.leaflet-infra-marker,
+.leaflet-overlay-marker {
+  font-size: 18px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.leaflet-heat-label span {
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.leaflet-custom-marker {
+  background: transparent !important;
+  border: none !important;
 }
 
 .market-map-canvas.layer-gdp {
@@ -1013,6 +1206,59 @@
   margin-bottom: 12px;
 }
 
+.market-fusion-dashboard {
+  margin-bottom: 16px;
+}
+
+.market-geo-section-card {
+  margin-bottom: 0;
+}
+
+.market-geo-section-card .ant-card-head {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.market-geo-section-card .ant-card-head-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.market-geo-section-card .ant-card-body {
+  padding: 12px;
+}
+
+.market-geo-layer-panel {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+}
+
+.market-geo-layer-group {
+  margin-bottom: 4px;
+}
+
+.market-geo-layer-group .ant-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.market-drill-strip {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.market-overview-cta {
+  text-align: center;
+  background: #fffaf9;
+  border: 1px dashed #f0d0ce;
+}
+
 .market-geo-toolbar {
   margin-bottom: 12px;
 }
@@ -1047,6 +1293,52 @@
   font-size: 16px;
   cursor: default;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.market-overlay-node {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  cursor: default;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.market-overlay-node.layer-disaster {
+  border-color: #ff4d4f;
+  background: #fff1f0;
+}
+
+.market-overlay-node.layer-cluster,
+.market-overlay-node.layer-industry {
+  border-color: #d48806;
+  background: #fff7e6;
+}
+
+.market-highway-path,
+.market-logistics-path {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.market-timeline-card .ant-tag {
+  margin-bottom: 4px;
+}
+
+.market-framework-tags .ant-tag {
+  margin: 0;
 }
 
 .market-logistics-path {
@@ -1259,6 +1551,52 @@
 .forecast-scenario-active {
   border-color: #B32620 !important;
   box-shadow: 0 0 0 1px #B32620;
+}
+
+.forecast-filter-bar {
+  background: #fafafa;
+}
+
+.forecast-decomp-item {
+  padding: 8px 10px;
+  background: #fafafa;
+  border-radius: 6px;
+  height: 100%;
+}
+
+.forecast-shock-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 6px 10px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.forecast-gap-card {
+  border-top: 2px solid #f0f0f0;
+}
+
+.forecast-gap-accelerating {
+  border-top-color: #52c41a;
+}
+
+.forecast-gap-whitespace {
+  border-top-color: #1677ff;
+}
+
+.forecast-gap-declining {
+  border-top-color: #ff4d4f;
+}
+
+.forecast-tab-cta {
+  margin-top: 16px;
+  padding: 12px 16px;
+  text-align: center;
+  background: #fffaf9;
+  border: 1px dashed #f0d0ce;
+  border-radius: 8px;
 }
 
 .policy-graph-canvas {
@@ -1534,4 +1872,53 @@
 .rbac-role-card.active {
   border-color: #B32620;
   background: #fff1f0;
+}
+
+.product-3d-mock {
+  perspective: 600px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+.product-3d-cube {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #B32620, #8c1a16);
+  transform: rotateX(20deg) rotateY(35deg);
+  animation: productCubeSpin 6s linear infinite;
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(179,38,32,0.35);
+}
+@keyframes productCubeSpin {
+  from { transform: rotateX(20deg) rotateY(0deg); }
+  to { transform: rotateX(20deg) rotateY(360deg); }
+}
+.enterprise-graph-canvas {
+  position: relative;
+  min-height: 280px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.enterprise-graph-canvas .eg-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.enterprise-graph-canvas svg.eg-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }

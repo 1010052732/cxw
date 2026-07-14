@@ -24,6 +24,7 @@ import {
   PRODUCT_CATEGORIES,
   getCompetitionData,
 } from '../../../../mock/analysis'
+import { exportJsonAsTxt } from '../analysisExport'
 
 const { Text, Paragraph } = Typography
 
@@ -32,7 +33,7 @@ export default function CompetitionTab({ country, category, onCategoryChange, on
   const [subTab, setSubTab] = useState('landscape')
   const [metric, setMetric] = useState('sales')
 
-  const data = useMemo(() => getCompetitionData(country, category), [country, category])
+  const data = useMemo(() => getCompetitionData(country, category, metric), [country, category, metric])
 
   const shareHistoryLines = useMemo(
     () => (data.shareHistory || []).flatMap((h) => [
@@ -92,6 +93,11 @@ export default function CompetitionTab({ country, category, onCategoryChange, on
                 onChange={setMetric}
               />
             </div>
+            {data.fallback && (
+              <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
+                当前品类竞争画像暂用相近市场模板（{data.dataScope}），口径切换仍生效
+              </Paragraph>
+            )}
             <div className="business-chart-box-sm">
               <Column
                 data={data.shareChart}
@@ -131,7 +137,11 @@ export default function CompetitionTab({ country, category, onCategoryChange, on
 
       <div className="business-panel">
         <h3 className="business-panel-title">竞争定位矩阵 · PCA 感知地图</h3>
-        <Paragraph type="secondary">基于价格水平（X轴）与产品质量感知（Y轴），气泡大小代表品牌知名度</Paragraph>
+        <Paragraph type="secondary">
+          {data.pcaAxes
+            ? `${data.pcaAxes.xLabel}（X） × ${data.pcaAxes.yLabel}（Y），气泡=品牌知名度`
+            : '基于价格水平（X轴）与产品质量感知（Y轴），气泡大小代表品牌知名度'}
+        </Paragraph>
         <div className="business-chart-box">
           <Scatter
             data={data.positioningScatter}
@@ -142,8 +152,8 @@ export default function CompetitionTab({ country, category, onCategoryChange, on
             height={320}
             pointStyle={{ fillOpacity: 0.85 }}
             label={{ formatter: (d) => d.name }}
-            xAxis={{ title: { text: '价格水平 →' } }}
-            yAxis={{ title: { text: '质量感知 →' } }}
+            xAxis={{ title: { text: data.pcaAxes?.xLabel || '价格水平 →' } }}
+            yAxis={{ title: { text: data.pcaAxes?.yLabel || '质量感知 →' } }}
           />
         </div>
         <Row gutter={12} style={{ marginTop: 12 }}>
@@ -204,7 +214,23 @@ export default function CompetitionTab({ country, category, onCategoryChange, on
                 </Space>
               </Card>
             ))}
-            <Button type="primary" block icon={<ThunderboltOutlined />} onClick={() => message.success('月度战略分析报告已生成')}>
+            <Button
+              type="primary"
+              block
+              icon={<ThunderboltOutlined />}
+              onClick={() => {
+                exportJsonAsTxt(
+                  `strategy-intent-${data.strategyReport?.month || 'report'}.txt`,
+                  {
+                    month: data.strategyReport?.month,
+                    summary: data.strategyReport?.summary,
+                    intents: data.strategyReport?.intents,
+                    generatedAt: new Date().toISOString(),
+                  },
+                )
+                message.success('月度战略意图分析报告已导出')
+              }}
+            >
               生成完整分析报告
             </Button>
           </div>
@@ -255,6 +281,27 @@ export default function CompetitionTab({ country, category, onCategoryChange, on
           </div>
         </Col>
       </Row>
+
+      {(data.billOfLading || []).length > 0 && (
+        <div className="business-panel">
+          <h3 className="business-panel-title">海关提单明细 · BOL 级追踪</h3>
+          <Table
+            rowKey="blNo"
+            size="small"
+            pagination={false}
+            dataSource={data.billOfLading}
+            columns={[
+              { title: '提单号', dataIndex: 'blNo', key: 'blNo', width: 120 },
+              { title: '发货人', dataIndex: 'shipper', key: 'shipper' },
+              { title: '收货人', dataIndex: 'consignee', key: 'consignee' },
+              { title: 'HS', dataIndex: 'hs', key: 'hs', width: 70 },
+              { title: '柜量', dataIndex: 'containers', key: 'containers', width: 70 },
+              { title: '航线', dataIndex: 'route', key: 'route' },
+              { title: 'ETA', dataIndex: 'eta', key: 'eta', width: 100 },
+            ]}
+          />
+        </div>
+      )}
     </>
   )
 

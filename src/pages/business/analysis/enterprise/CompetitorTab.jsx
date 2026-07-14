@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Alert,
   Button,
   Card,
   Col,
   Row,
+  Segmented,
   Space,
   Table,
   Tag,
@@ -13,39 +14,78 @@ import {
 } from 'antd'
 import { Radar } from '@ant-design/charts'
 import { AlertOutlined, DashboardOutlined, RiseOutlined } from '@ant-design/icons'
-import { getCompetitorAnalysis, getEnterpriseDetail } from '../../../../mock/analysis'
+import { buildMetric39Radar, getCompetitorAnalysis, getEnterpriseDetail } from '../../../../mock/analysis'
+import { exportCsv } from '../analysisExport'
+import { App } from 'antd'
 
-const { Text, Paragraph } = Typography
+const { Text } = Typography
+
+const CATEGORY_LABEL = { 财务: '财务表现(12)', 市场: '市场表现(8)', 产品: '产品表现(10)', 运营: '运营表现(9)' }
 
 export default function CompetitorTab({ enterpriseName, onGoPartner }) {
+  const { message } = App.useApp()
+  const [metricGroup, setMetricGroup] = useState('全部')
   const ent = useMemo(() => getEnterpriseDetail(enterpriseName), [enterpriseName])
   const data = useMemo(() => getCompetitorAnalysis(enterpriseName), [enterpriseName])
+  const metrics39 = useMemo(() => buildMetric39Radar(enterpriseName), [enterpriseName])
 
-  const radarFlat = useMemo(() => {
-    const rows = data.radarCompare || []
-    return rows.flatMap((r) => [
-      { item: r.item, score: r.self, series: ent.name },
-      { item: r.item, score: r.rival1, series: data.rivals?.[0]?.name || '竞品A' },
-      ...(r.rival2 != null ? [{ item: r.item, score: r.rival2, series: data.rivals?.[1]?.name || '竞品B' }] : []),
-    ])
-  }, [data, ent.name])
+  const filteredMetrics = useMemo(() => {
+    if (metricGroup === '全部') return metrics39
+    return metrics39.filter((m) => m.category === metricGroup)
+  }, [metrics39, metricGroup])
+
+  const radarFlat = useMemo(() => filteredMetrics.flatMap((r) => [
+    { item: r.item, score: r.self, series: ent.name },
+    { item: r.item, score: r.rival1, series: data.rivals?.[0]?.name || '竞品A' },
+    ...(r.rival2 != null ? [{ item: r.item, score: r.rival2, series: data.rivals?.[1]?.name || '竞品B' }] : []),
+  ]), [filteredMetrics, data, ent.name])
 
   return (
     <>
       <div className="business-filter-bar">
-        <Space>
+        <Space wrap>
           <Text>分析主体</Text>
           <Tag color="processing">{enterpriseName}</Tag>
+          <Segmented
+            value={metricGroup}
+            onChange={setMetricGroup}
+            options={['全部', '财务', '市场', '产品', '运营']}
+          />
         </Space>
-        {onGoPartner && <Button type="link" onClick={onGoPartner}>合作伙伴评估 →</Button>}
+        <Space>
+          <Button
+            size="small"
+            onClick={() => {
+              exportCsv(`competitor-39metrics-${enterpriseName}.csv`, ['category', 'item', 'self', 'rival1', 'rival2'], metrics39)
+              message.success('39项指标对比表已导出')
+            }}
+          >
+            导出指标
+          </Button>
+          {onGoPartner && <Button type="link" onClick={onGoPartner}>合作伙伴评估 →</Button>}
+        </Space>
       </div>
 
       <Row gutter={16}>
         <Col xs={24} lg={14}>
           <div className="business-panel">
-            <h3 className="business-panel-title">39项指标 · 竞争力雷达对标</h3>
+            <h3 className="business-panel-title">
+              39项指标 · 竞争力雷达对标
+              {metricGroup !== '全部' && <Tag style={{ marginLeft: 8 }}>{CATEGORY_LABEL[metricGroup]}</Tag>}
+            </h3>
+            <Paragraph type="secondary" style={{ fontSize: 12 }}>
+              财务12 + 市场8 + 产品10 + 运营9 = 39项；当前展示 {filteredMetrics.length} 项
+            </Paragraph>
             <div className="business-chart-box">
-              <Radar data={radarFlat} xField="item" yField="score" seriesField="series" height={320} meta={{ score: { min: 0, max: 100 } }} color={['#B32620', '#1677ff', '#52c41a']} />
+              <Radar
+                data={radarFlat}
+                xField="item"
+                yField="score"
+                seriesField="series"
+                height={360}
+                meta={{ score: { min: 0, max: 100 } }}
+                color={['#B32620', '#1677ff', '#52c41a']}
+              />
             </div>
           </div>
         </Col>
@@ -56,7 +96,7 @@ export default function CompetitorTab({ enterpriseName, onGoPartner }) {
               { title: '指标', dataIndex: 'metric', key: 'metric' },
               { title: '本企业', dataIndex: 'self', key: 'self', width: 70 },
               { title: '竞品', dataIndex: 'rival', key: 'rival', width: 70 },
-              { title: '差距', dataIndex: 'gap', key: 'gap', width: 70, render: (v) => <Tag color={v.startsWith('+') ? 'success' : 'error'}>{v}</Tag> },
+              { title: '差距', dataIndex: 'gap', key: 'gap', width: 70, render: (v) => <Tag color={String(v).startsWith('+') ? 'success' : 'error'}>{v}</Tag> },
             ]} />
             <Table
               size="small"
@@ -83,7 +123,7 @@ export default function CompetitorTab({ enterpriseName, onGoPartner }) {
       <Row gutter={16}>
         <Col xs={24} lg={14}>
           <div className="business-panel">
-            <h3 className="business-panel-title"><DashboardOutlined /> 实时竞争动态看板</h3>
+            <h3 className="business-panel-title"><DashboardOutlined /> 实时竞争动态看板（24h更新）</h3>
             {(data.dashboard || []).map((d) => (
               <Card key={d.date + d.content} size="small" style={{ marginBottom: 8 }}>
                 <Space><Tag>{d.type}</Tag><Text type="secondary">{d.date}</Text></Space>
@@ -98,7 +138,6 @@ export default function CompetitorTab({ enterpriseName, onGoPartner }) {
             {(data.alerts || []).map((a) => (
               <Alert key={a.title} type={a.level === '高' ? 'error' : 'warning'} showIcon message={a.title} description={`${a.desc} · ${a.date}`} style={{ marginBottom: 12 }} />
             ))}
-            {!(data.alerts || []).length && <Paragraph type="secondary">暂无重大异动</Paragraph>}
           </div>
         </Col>
       </Row>

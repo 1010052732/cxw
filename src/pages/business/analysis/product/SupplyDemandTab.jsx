@@ -207,19 +207,39 @@ export default function SupplyDemandTab({ productName, onGoBarrier }) {
               <Button type="primary" size="small" icon={<AlertOutlined />} onClick={handleSimulate}>启动模拟</Button>
             </div>
             <Alert type="warning" showIcon message={bottleneck.event} description={(bottleneck.affected || []).join(' · ')} style={{ marginBottom: 12 }} />
-            {simulated && (bottleneck.simulation || []).length > 0 && (
+            {simulated && (
               <>
-                <div className="business-chart-box-sm">
-                  <Column
-                    data={bottleneck.simulation}
-                    xField="region"
-                    yField="costUp"
-                    height={180}
-                    color="#B32620"
-                    label={{ position: 'top', formatter: (d) => `+${d.costUp}%` }}
-                  />
-                </div>
+                {(bottleneck.simulation || []).length > 0 && (
+                  <div className="business-chart-box-sm">
+                    <Column
+                      data={bottleneck.simulation}
+                      xField="region"
+                      yField="costUp"
+                      height={180}
+                      color="#B32620"
+                      label={{ position: 'top', formatter: (d) => `+${d.costUp}%` }}
+                    />
+                  </div>
+                )}
                 <Paragraph type="secondary">延迟与成本上升热力分布</Paragraph>
+                <div className="heatmap-grid" style={{ marginTop: 8 }}>
+                  {(bottleneck.propagationHeatmap || bottleneck.simulation || []).map((cell) => (
+                    <div
+                      key={cell.region}
+                      className="heatmap-cell"
+                      style={{
+                        background: `rgba(179,38,32,${Math.min(0.9, ((cell.delay || 0) + (cell.cost || cell.costUp || 0)) / 40)})`,
+                        color: '#fff',
+                        padding: 8,
+                        borderRadius: 4,
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontWeight: 600 }}>{cell.region}</div>
+                      <div style={{ fontSize: 12 }}>延迟 {cell.delay || 0}天 · 成本+{cell.cost || cell.costUp || 0}%</div>
+                    </div>
+                  ))}
+                </div>
               </>
             )}
             <Space wrap style={{ marginTop: 8 }}>

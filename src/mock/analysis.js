@@ -28,11 +28,101 @@ export const MAP_LAYERS = [
   { key: 'population', label: '人口热力', default: false },
   { key: 'nightlight', label: '夜间灯光', default: false },
   { key: 'infra', label: '基础设施', default: false },
-  { key: 'industry', label: '产业聚集', default: false },
-  { key: 'ftz', label: '自贸区', default: false },
-  { key: 'risk', label: '政治风险', default: false },
-  { key: 'climate', label: '气候风险', default: false },
+  { key: 'cluster', label: '制造业集群', default: false },
+  { key: 'resource', label: '资源禀赋区', default: false },
+  { key: 'hinterland', label: '港口腹地', default: false },
+  { key: 'industry', label: '产业园区', default: false },
+  { key: 'ftz', label: '自贸区/经济特区', default: false },
+  { key: 'risk', label: '政治风险热区', default: false },
+  { key: 'disaster', label: '自然灾害历史', default: false },
+  { key: 'climate', label: '气候风险带', default: false },
 ]
+
+/** 地理图层分组 · 对齐需求文档 3.2.2.2.1.1（1）地理信息可视化层 */
+export const MAP_LAYER_GROUPS = [
+  {
+    key: 'macro',
+    label: '宏观经济代理指标',
+    hint: '识别消费能力与商业活跃度空间分布',
+    layers: ['trade', 'gdp', 'population', 'nightlight'],
+  },
+  {
+    key: 'logistics',
+    label: '基础设施与物流网络',
+    hint: '港口·机场·铁路·公路与港口腹地',
+    layers: ['infra', 'hinterland'],
+  },
+  {
+    key: 'industry',
+    label: '产业要素分布',
+    hint: '制造集群·资源禀赋·产业园区·自贸区',
+    layers: ['cluster', 'resource', 'industry', 'ftz'],
+  },
+  {
+    key: 'risk',
+    label: '制度与安全边界',
+    hint: '政治风险·自然灾害史·气候风险带',
+    layers: ['risk', 'disaster', 'climate'],
+  },
+]
+
+const SUPPLY_MATERIALS_BY_MARKET = {
+  germany: {
+    vehicle: [
+      { name: '钢铁/铝材', origin: '本地+进口', stability: '中' },
+      { name: '芯片/电控', origin: '进口依赖', stability: '低' },
+      { name: '精密轴承', origin: '德日供应', stability: '中' },
+    ],
+    machinery: [
+      { name: '特种钢', origin: '本地为主', stability: '高' },
+      { name: '数控系统', origin: '进口依赖', stability: '低' },
+    ],
+    electronics: [
+      { name: '半导体', origin: '亚洲进口', stability: '低' },
+      { name: '被动元件', origin: '欧陆分销', stability: '中' },
+    ],
+    agri: [
+      { name: '化肥', origin: '进口', stability: '中' },
+      { name: '冷链设备', origin: '本地+进口', stability: '中' },
+    ],
+  },
+  usa: {
+    vehicle: [
+      { name: '铝材/钢材', origin: '北美本地', stability: '高' },
+      { name: '锂电池', origin: '进口依赖', stability: '低' },
+    ],
+    electronics: [
+      { name: '先进制程芯片', origin: '进口依赖', stability: '低' },
+      { name: '组装辅料', origin: '墨西哥供应', stability: '中' },
+    ],
+  },
+  asean: {
+    electronics: [
+      { name: '芯片', origin: '进口依赖', stability: '低' },
+      { name: '显示模组', origin: '区域内组装', stability: '中' },
+    ],
+    vehicle: [
+      { name: '零部件', origin: '中日韩进口', stability: '中' },
+    ],
+  },
+  japan: {
+    electronics: [
+      { name: '稀土', origin: '进口依赖', stability: '低' },
+      { name: '精密材料', origin: '本土为主', stability: '高' },
+    ],
+  },
+  brazil: {
+    agri: [
+      { name: '农机设备', origin: '进口依赖', stability: '中' },
+      { name: '化肥/种子', origin: '本地+进口', stability: '中' },
+    ],
+  },
+}
+
+export function getSupplyMaterials(country, category = 'vehicle') {
+  const market = SUPPLY_MATERIALS_BY_MARKET[country] || SUPPLY_MATERIALS_BY_MARKET.germany
+  return market[category] || market.vehicle || SUPPLY_MATERIALS_BY_MARKET.germany.vehicle
+}
 
 export const PRODUCT_CATEGORIES = [
   { value: 'vehicle', label: '乘用车' },
@@ -51,12 +141,16 @@ export const MARKET_EXTENDED = {
       { id: 'de-bw', name: '巴符州', x: 50, y: 30, snapshot: { gdp: '5,600亿EUR', population: '1110万', import: '756亿', export: '890亿', lpi: 4.3, business: 84 } },
     ],
     timeline: [
-      { year: 2015, label: '2015', value: 2680, event: '难民危机冲击消费' },
-      { year: 2018, label: '2018', value: 2920, event: '中美贸易摩擦间接影响出口' },
-      { year: 2020, label: '2020', value: 2750, event: '疫情供应链中断' },
-      { year: 2022, label: '2022', value: 3050, event: '能源危机推高成本' },
-      { year: 2024, label: '2024', value: 3180, event: '绿色转型投资加速' },
-      { year: 2026, label: '2026', value: 3280, event: 'CBAM正式实施' },
+      { year: 2016, label: '2016', value: 2720, event: '柴油门后续影响出口', priceIndex: 98, fxRate: 'EUR/CNY 7.35', policyTag: '欧VI排放标准加严' },
+      { year: 2017, label: '2017', value: 2810, event: '电动化转型起步', priceIndex: 101, fxRate: 'EUR/CNY 7.82', policyTag: '新能源补贴框架出台' },
+      { year: 2018, label: '2018', value: 2920, event: '中美贸易摩擦间接影响出口', priceIndex: 105, fxRate: 'EUR/CNY 7.85', policyTag: '关税反制措施' },
+      { year: 2019, label: '2019', value: 2980, event: '制造业景气回升', priceIndex: 103, fxRate: 'EUR/CNY 7.74', policyTag: '供应链尽职调查酝酿' },
+      { year: 2020, label: '2020', value: 2750, event: '疫情供应链中断', priceIndex: 96, fxRate: 'EUR/CNY 7.95', policyTag: '边境检疫与物流限制' },
+      { year: 2021, label: '2021', value: 2880, event: '需求复苏与芯片短缺并存', priceIndex: 112, fxRate: 'EUR/CNY 7.63', policyTag: '芯片出口管制讨论' },
+      { year: 2022, label: '2022', value: 3050, event: '能源危机推高成本', priceIndex: 128, fxRate: 'EUR/CNY 7.08', policyTag: '俄乌冲突能源冲击' },
+      { year: 2023, label: '2023', value: 3120, event: '通胀回落、出口趋稳', priceIndex: 118, fxRate: 'EUR/CNY 7.85', policyTag: '通胀回落政策组合' },
+      { year: 2024, label: '2024', value: 3180, event: '绿色转型投资加速', priceIndex: 115, fxRate: 'EUR/CNY 7.72', policyTag: '绿色补贴与CBAM过渡' },
+      { year: 2025, label: '2025', value: 3240, event: 'CBAM过渡期履约加速', priceIndex: 119, fxRate: 'EUR/CNY 7.68', policyTag: 'CBAM正式申报窗口' },
     ],
     keyEvents: [
       { date: '2026-05', title: 'CBAM正式实施', type: 'policy', impact: '高' },
@@ -80,6 +174,11 @@ export const MARKET_EXTENDED = {
           { topic: '品牌偏好', score: 62, trend: '稳定', source: '消费者调研' },
         ],
         insights: ['纯电渗透率加速', '价格敏感度上升', '售后与充电网络成关键'],
+        preferenceMatrix: {
+          rows: ['豪华', '中高端', '经济型'],
+          cols: ['4S店/经销商', '线上渠道', 'B2B平台'],
+          values: [[12, 6, 4], [18, 14, 13], [14, 6, 13]],
+        },
       },
       machinery: {
         byType: [{ name: '数控机床', share: 35, growth: 6 }, { name: '工业机器人', share: 28, growth: 14 }, { name: '通用机械', share: 37, growth: 3 }],
@@ -103,11 +202,11 @@ export const MARKET_EXTENDED = {
       { stage: '分销零售', players: '4S/贸易商/B2B平台', margin: '15%', risk: '低' },
     ],
     heatmapCells: [
-      { id: 'de-nw', label: '北威州', x: 38, y: 22, w: 18, h: 22, trade: 92, gdp: 90, risk: 32, climate: 38, infra: 94, industry: 88 },
-      { id: 'de-by', label: '巴伐利亚', x: 52, y: 30, w: 16, h: 20, trade: 88, gdp: 94, risk: 28, climate: 35, infra: 90, industry: 92 },
-      { id: 'de-bw', label: '巴符州', x: 48, y: 26, w: 15, h: 18, trade: 85, gdp: 91, risk: 30, climate: 36, infra: 88, industry: 90 },
-      { id: 'de-north', label: '北部沿海', x: 44, y: 16, w: 20, h: 16, trade: 78, gdp: 72, risk: 35, climate: 52, infra: 86, industry: 68 },
-      { id: 'de-east', label: '东部', x: 58, y: 24, w: 16, h: 18, trade: 62, gdp: 58, risk: 42, climate: 40, infra: 74, industry: 62 },
+      { id: 'de-nw', label: '北威州', x: 38, y: 22, w: 18, h: 22, trade: 92, gdp: 90, risk: 32, climate: 38, infra: 94, industry: 88, cluster: 86, resource: 42, hinterland: 91, disaster: 28 },
+      { id: 'de-by', label: '巴伐利亚', x: 52, y: 30, w: 16, h: 20, trade: 88, gdp: 94, risk: 28, climate: 35, infra: 90, industry: 92, cluster: 94, resource: 38, hinterland: 72, disaster: 22 },
+      { id: 'de-bw', label: '巴符州', x: 48, y: 26, w: 15, h: 18, trade: 85, gdp: 91, risk: 30, climate: 36, infra: 88, industry: 90, cluster: 88, resource: 45, hinterland: 78, disaster: 25 },
+      { id: 'de-north', label: '北部沿海', x: 44, y: 16, w: 20, h: 16, trade: 78, gdp: 72, risk: 35, climate: 52, infra: 86, industry: 68, cluster: 62, resource: 55, hinterland: 95, disaster: 48 },
+      { id: 'de-east', label: '东部', x: 58, y: 24, w: 16, h: 18, trade: 62, gdp: 58, risk: 42, climate: 40, infra: 74, industry: 62, cluster: 58, resource: 52, hinterland: 45, disaster: 32 },
     ],
   },
   usa: {
@@ -740,17 +839,37 @@ export const PRODUCT_EXTENDED = {
         { name: '博世', country: '德国', capacity: '1200万件/年', contact: 'b2b@bosch.com' },
         { name: '大陆集团', country: '德国', capacity: '980万件/年', contact: 'trade@continental.com' },
         { name: '万向集团', country: '中国', capacity: '1500万件/年', contact: 'export@wanxiang.com' },
+        { name: '采埃孚', country: '德国', capacity: '1100万件/年', contact: 'oem@zf.com' },
+        { name: '电装', country: '日本', capacity: '860万件/年', contact: 'global@denso.com' },
+        { name: '法雷奥', country: '法国', capacity: '920万件/年', contact: 'trade@valeo.com' },
+        { name: '宁德时代配套', country: '中国', capacity: '640万件/年', contact: 'parts@catl.com' },
+        { name: '麦格纳', country: '加拿大', capacity: '780万件/年', contact: 'b2b@magna.com' },
       ],
       consumers: [
         { country: '德国', rank: 1, feature: '品质认证要求高' },
         { country: '美国', rank: 2, feature: '售后市场庞大' },
         { country: '墨西哥', rank: 3, feature: 'USMCA原产地优势' },
+        { country: '日本', rank: 4, feature: '精益供应链配套' },
+        { country: '韩国', rank: 5, feature: '新能源车渗透快' },
+        { country: '巴西', rank: 6, feature: '本地化组装需求' },
+        { country: '印度', rank: 7, feature: '成本敏感售后市场' },
+        { country: '东盟', rank: 8, feature: '整车产能扩张拉动' },
       ],
       certifications: [
         { name: 'ECE R90', type: '强制' }, { name: 'IATF 16949', type: '强制' }, { name: 'ISO 9001', type: '自愿' },
       ],
       priceRange: { min: 118, max: 165, avg: 142, volatility: 0.12, period: '近10年' },
+      priceHistory10y: [
+        { year: 2016, price: 118 }, { year: 2017, price: 121 }, { year: 2018, price: 126 },
+        { year: 2019, price: 124 }, { year: 2020, price: 119 }, { year: 2021, price: 128 },
+        { year: 2022, price: 136 }, { year: 2023, price: 139 }, { year: 2024, price: 141 }, { year: 2025, price: 142 },
+      ],
       tradeIndex: 86,
+      tradeIndex10y: [
+        { year: 2016, index: 62 }, { year: 2017, index: 66 }, { year: 2018, index: 70 },
+        { year: 2019, index: 72 }, { year: 2020, index: 58 }, { year: 2021, index: 74 },
+        { year: 2022, index: 79 }, { year: 2023, index: 82 }, { year: 2024, index: 84 }, { year: 2025, index: 86 },
+      ],
       tradeTrend: '上升',
       updateDate: '2026-07-02',
     },
@@ -1075,13 +1194,32 @@ function buildStandardization(indices) {
   }
 }
 
+export function resolveMarketCountryValue(labelOrValue) {
+  if (!labelOrValue || labelOrValue === 'all') return null
+  const byValue = MARKET_COUNTRIES.find((c) => c.value === labelOrValue)
+  if (byValue) return byValue.value
+  const byLabel = MARKET_COUNTRIES.find((c) => c.label === labelOrValue || labelOrValue.includes(c.label) || c.label.includes(labelOrValue))
+  return byLabel?.value || null
+}
+
+export function resolveProductByRelatedName(name) {
+  if (!name) return null
+  const direct = Object.keys(PRODUCT_CATALOG).find((k) => name.includes(k) || k.includes(name))
+  if (direct) return direct
+  if (/润滑|轮胎|刹|汽配|配件/i.test(name)) return '汽车配件'
+  if (/光纤|5g|通信|电子|芯片/i.test(name)) return '电子产品'
+  if (/机床|工业|机械|软件/i.test(name)) return '机械设备'
+  return null
+}
+
 export function semanticSearchProducts(keyword, filters = {}) {
   const q = (keyword || '').trim().toLowerCase()
-  const results = Object.keys(PRODUCT_CATALOG).map((name) => {
+  let results = Object.keys(PRODUCT_CATALOG).map((name) => {
     const base = PRODUCT_CATALOG[name]
     const ext = PRODUCT_EXTENDED[name] || {}
     let score = 50
-    if (name.includes(keyword) || keyword.includes(name)) score = 98
+    if (!q) score = 80
+    else if (name.includes(keyword) || keyword.includes(name)) score = 98
     else if (ext.keywords?.some((k) => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()))) score = 88
     else if (base.hsCode.includes(keyword)) score = 95
     else if (base.desc.includes(keyword)) score = 72
@@ -1092,7 +1230,20 @@ export function semanticSearchProducts(keyword, filters = {}) {
   }).filter((r) => r.confidence >= 40)
 
   if (filters.targetMarket && filters.targetMarket !== 'all') {
-    results.forEach((r) => { if (r.ext.archive?.consumers?.some((c) => c.country.includes(filters.targetMarket))) r.confidence += 5 })
+    results = results.filter((r) => r.ext.archive?.consumers?.some((c) => c.country.includes(filters.targetMarket) || filters.targetMarket.includes(c.country)))
+      .map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 8) }))
+  }
+  if (filters.origin && filters.origin !== 'all') {
+    results = results.filter((r) => r.ext.archive?.producers?.some((p) => p.country?.includes(filters.origin) || filters.origin.includes(p.country)))
+      .map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 5) }))
+  }
+  if (filters.tradeMode && filters.tradeMode !== 'all') {
+    const tradeModeBoost = { general: 3, processing: 2, bonded: 2, crossborder: 2 }[filters.tradeMode] || 1
+    results = results.map((r) => ({
+      ...r,
+      confidence: Math.min(99, r.confidence + tradeModeBoost),
+      tradeModeHint: filters.tradeMode,
+    }))
   }
   return results.sort((a, b) => b.confidence - a.confidence)
 }
@@ -1207,6 +1358,14 @@ const SUPPLY_DEMAND_DATA = {
         { region: '波兰', delay: 8, costUp: 3.1 },
         { region: '意大利', delay: 14, costUp: 4.8 },
       ],
+      propagationHeatmap: [
+        { region: '德国', delay: 12, cost: 4.2 },
+        { region: '荷兰', delay: 10, cost: 3.8 },
+        { region: '波兰', delay: 8, cost: 3.1 },
+        { region: '意大利', delay: 14, cost: 4.8 },
+        { region: '法国', delay: 9, cost: 3.5 },
+        { region: '捷克', delay: 7, cost: 2.8 },
+      ],
       suggestions: ['提前锁定Q3货源', '评估中欧班列替代', '增加安全库存15天'],
     },
   },
@@ -1270,9 +1429,17 @@ const TRADE_BARRIER_DATA = {
   汽车配件: {
     barriers: [
       { country: '美国', type: '关税', desc: 'MFN 2.5%，301清单部分子目+25%', law: 'Section 301', status: '生效中', rate: '27.5%', exemption: 'USMCA原产地', originRule: 'RVC≥75%' },
+      { country: '巴西', type: '配额', desc: '部分汽车零部件进口配额管理', law: 'SECEX', status: '生效中', rate: '配额内0', exemption: '配额证', originRule: '-' },
+      { country: '俄罗斯', type: '禁令', desc: '特定制动系统制裁禁运清单', law: '制裁清单', status: '生效中', rate: '-', exemption: '-', originRule: '-' },
       { country: '德国', type: 'TBT', desc: 'ECE R90制动器认证', law: 'EU 661/2009', status: '生效中', rate: '-', exemption: '-', originRule: '非优惠' },
+      { country: '印度', type: 'SPS', desc: 'BIS强制认证及有害物质限量', law: 'BIS Act', status: '生效中', rate: '-', exemption: '-', originRule: '-' },
       { country: '德国', type: '反倾销', desc: '部分制动器反倾销税', law: 'EU 2024/xxx', status: '调查中', rate: '12.6%', exemption: '价格承诺', originRule: '中国原产' },
-      { country: '印度', type: 'SPS', desc: 'BIS强制认证', law: 'BIS Act', status: '生效中', rate: '-', exemption: '-', originRule: '-' },
+      { country: '美国', type: '反补贴', desc: '对补贴出口零部件反补贴调查', law: 'CVD', status: '调查中', rate: '6.8%', exemption: '-', originRule: '中国原产' },
+      { country: '土耳其', type: '保障措施', desc: '进口激增临时保障措施', law: 'Safeguard', status: '生效中', rate: '附加税8%', exemption: '发展中国家豁免', originRule: '-' },
+      { country: '沙特', type: '许可证', desc: 'SASO进口许可证', law: 'SABER', status: '生效中', rate: '-', exemption: '-', originRule: '-' },
+      { country: '欧盟', type: '知识产权', desc: '海关知识产权边境执法', law: 'EU 608/2013', status: '生效中', rate: '-', exemption: '权利人授权', originRule: '-' },
+      { country: '欧盟', type: '绿色壁垒', desc: 'REACH/ELV有害物质与碳足迹披露', law: 'REACH/ELV', status: '生效中', rate: '-', exemption: '-', originRule: '-' },
+      { country: '美国', type: '出口管制', desc: '特定高精度传感模块EAR管控', law: 'EAR', status: '生效中', rate: '-', exemption: '许可例外', originRule: '-' },
     ],
     routes: [
       { id: 'direct-us', name: '中国直出口美国', tariff: 27.5, vat: 0, addDuty: 0, agency: 2.5, total: 30.0 },
@@ -1335,6 +1502,21 @@ export const BARRIER_COUNTRY_OPTIONS = [
   { value: '东盟', label: '东盟' },
 ]
 
+export const BARRIER_TYPE_OPTIONS = [
+  { value: '关税', label: '关税' },
+  { value: '配额', label: '配额' },
+  { value: '禁令', label: '禁令' },
+  { value: 'TBT', label: 'TBT' },
+  { value: 'SPS', label: 'SPS' },
+  { value: '反倾销', label: '反倾销' },
+  { value: '反补贴', label: '反补贴' },
+  { value: '保障措施', label: '保障措施' },
+  { value: '许可证', label: '许可证' },
+  { value: '知识产权', label: '知识产权' },
+  { value: '绿色壁垒', label: '绿色壁垒' },
+  { value: '出口管制', label: '出口管制' },
+]
+
 export function getSupplyDemandData(name) {
   return SUPPLY_DEMAND_DATA[name] || SUPPLY_DEMAND_DATA['汽车配件']
 }
@@ -1345,11 +1527,25 @@ export function getTradeBarrierData(name, country = 'all') {
   return { ...base, barriers: barriers.length ? barriers : base.barriers }
 }
 
-export function calcBarrierCost(cargoValue, route, barriers = []) {
+export function calcBarrierCost(cargoValue, route, options = {}) {
   const value = Number(cargoValue) || 0
-  const tariffCost = value * (route.tariff / 100)
+  const { origin = '中国', targetMarket = '德国', barriers = [] } = options
+  const ftaDiscount = origin === '中国' && /东盟|越南|RCEP/i.test(route.name || '')
+    ? 0.65
+    : origin !== '中国' && /自贸|东盟|越南/i.test(route.name || '')
+      ? 0.55
+      : /自贸|原产地|FTA/i.test(route.name || '')
+        ? 0.7
+        : 1
+  const marketFactor = targetMarket.includes('美国') ? 1.08 : targetMarket.includes('巴西') ? 1.12 : targetMarket.includes('日本') ? 1.05 : 1
+  const matchedBarrier = (barriers || []).find((b) => targetMarket.includes(b.country) || b.country.includes(targetMarket))
+  const extraAddDuty = matchedBarrier && /反倾销|反补贴/i.test(matchedBarrier.type || '')
+    ? Number(String(matchedBarrier.rate).replace(/[^\d.]/g, '')) || 0
+    : 0
+  const tariffRate = route.tariff * ftaDiscount * marketFactor
+  const tariffCost = value * (tariffRate / 100)
   const vatCost = (value + tariffCost) * (route.vat / 100)
-  const addDuty = value * (route.addDuty / 100)
+  const addDuty = value * ((route.addDuty + extraAddDuty) / 100)
   const agency = value * (route.agency / 100)
   const total = value + tariffCost + vatCost + addDuty + agency
   return {
@@ -1359,7 +1555,11 @@ export function calcBarrierCost(cargoValue, route, barriers = []) {
     addDuty: Math.round(addDuty * 100) / 100,
     agency: Math.round(agency * 100) / 100,
     total: Math.round(total * 100) / 100,
-    rateTotal: route.total,
+    rateTotal: Math.round((tariffRate + route.vat + route.addDuty + extraAddDuty + route.agency) * 10) / 10,
+    origin,
+    targetMarket,
+    ftaApplied: ftaDiscount < 1,
+    note: ftaDiscount < 1 ? `已按原产地「${origin}」适用优惠路径折扣` : `按原产地「${origin}」→「${targetMarket}」标准路径测算`,
   }
 }
 
@@ -1584,27 +1784,117 @@ export const ENTERPRISE_EXTENDED = {
       supplier: { dimensions: [{ dim: '交付', score: 92, weight: 30 }, { dim: '服务', score: 88, weight: 25 }], total: 88, risks: ['1次报关差错'] },
       customer: { dimensions: [{ dim: '信用', score: 86, weight: 30 }], total: 84, risks: ['无'] },
     },
-    benchmarks: { recommended: [{ name: 'DHL供应链', type: '规模对标', industry: '物流', score: 92 }], gaps: [], practices: [], actions: ['优化航线成本'] },
+    benchmarks: {
+      recommended: [{ name: 'DHL供应链', type: '规模对标', industry: '物流', score: 92 }],
+      gaps: [
+        { metric: '毛利率', self: '15%', benchmark: '18%', gap: '-3ppt', factor: '采购议价能力偏弱' },
+        { metric: '航线准时率', self: '91%', benchmark: '96%', gap: '-5ppt', factor: '旺季舱位波动' },
+      ],
+      practices: [{ title: 'DHL数字化订舱', link: '提升舱位预订准确率', domain: '运营' }],
+      actions: ['优化航线成本', '降低报关差错率'],
+    },
     dueDiligence: { riskLevel: '中', checks: ['核实诉讼进展'], summary: '物流能力突出，需关注客户集中度。' },
   },
   丝路跨境贸易: {
     scope: '中东、中亚跨境贸易',
-    revenueTrend: [{ year: '2025', revenue: 4.2, growth: 14 }],
+    revenueTrend: [
+      { year: '2024', revenue: 3.6, growth: 9 },
+      { year: '2025', revenue: 4.2, growth: 14 },
+      { year: '2026', revenue: 4.8, growth: 14 },
+    ],
     healthScore: 76,
     healthLevel: '良好',
     healthDims: { finance: 72, risk: 78, operation: 75, credit: 78 },
     patents: 2,
     litigation: 0,
     penalties: 1,
-    equityGraph: { nodes: [{ id: 'root', label: '丝路跨境', type: 'self', x: 50, y: 50 }], edges: [] },
-    tradeNetwork: { suppliers: [], buyers: [{ name: '中东能源贸易', country: '阿联酋', years: 3, share: 45, products: '机械' }], concentration: '区域集中度高' },
-    competitors: ['华贸进出口集团'],
-    partnerEval: {
-      supplier: { dimensions: [{ dim: '成本', score: 80, weight: 30 }], total: 78, risks: ['1次行政处罚', '2次逾期付款'] },
-      customer: { dimensions: [{ dim: '稳定性', score: 70, weight: 30 }], total: 72, risks: ['订单波动大'] },
+    equityGraph: {
+      nodes: [
+        { id: 'root', label: '丝路跨境', type: 'self', x: 50, y: 50 },
+        { id: 'parent', label: '丝路控股', type: 'parent', x: 20, y: 20 },
+        { id: 'uae', label: '迪拜贸易公司', type: 'subsidiary', x: 80, y: 30 },
+      ],
+      edges: [{ from: 'parent', to: 'root' }, { from: 'root', to: 'uae' }],
     },
-    benchmarks: { recommended: [{ name: '新疆众和', type: '区域对标', industry: '跨境', score: 80 }], gaps: [], practices: [], actions: [] },
-    dueDiligence: { riskLevel: '中', checks: ['核查行政处罚详情', '确认中东客户真实性'], summary: '区域特色明显，合作需加强信用监控。' },
+    tradeNetwork: {
+      suppliers: [
+        { name: '西北机械制造', country: '中国', years: 4, share: 38, products: '机械设备' },
+        { name: '华贸进出口集团', country: '中国', years: 2, share: 22, products: '汽车配件' },
+      ],
+      buyers: [
+        { name: '中东能源贸易', country: '阿联酋', years: 3, share: 45, products: '机械设备' },
+        { name: '中亚基建集团', country: '哈萨克斯坦', years: 2, share: 28, products: '机械设备' },
+      ],
+      concentration: '区域集中度高 · 前两大买家占比73%',
+    },
+    competitors: ['华贸进出口集团', '远洋供应链公司'],
+    competitorAnalysis: {
+      rivals: [
+        { name: '华贸进出口集团', revenue: '11.2亿', marketShare: '18%', rdRatio: '4.5%', patents: 12, margin: '18%' },
+        { name: '远洋供应链公司', revenue: '6.8亿', marketShare: '12%', rdRatio: '3.2%', patents: 5, margin: '15%' },
+      ],
+      self: { name: '丝路跨境贸易', revenue: '4.8亿', marketShare: '8%', rdRatio: '2.1%', patents: 2, margin: '12%' },
+      radarCompare: [
+        { item: '营收规模', self: 58, rival1: 88, rival2: 72 },
+        { item: '毛利率', self: 55, rival1: 72, rival2: 65 },
+        { item: '研发投入', self: 42, rival1: 68, rival2: 55 },
+        { item: '市场覆盖', self: 70, rival1: 85, rival2: 78 },
+        { item: '交付准时率', self: 75, rival1: 90, rival2: 88 },
+        { item: '客户留存', self: 68, rival1: 82, rival2: 80 },
+      ],
+      gapTable: [
+        { metric: '毛利率', self: '12%', rival: '18%', gap: '-6ppt', note: '区域溢价能力偏弱' },
+        { metric: '覆盖国家数', self: '9', rival: '22', gap: '-13', note: '仍集中中东中亚' },
+        { metric: '研发投入占比', self: '2.1%', rival: '4.5%', gap: '-2.4ppt', note: '产品差异化不足' },
+      ],
+      strategyPath: [
+        { year: '2019', event: '开通中亚陆路班列通道' },
+        { year: '2021', event: '设立迪拜保税仓' },
+        { year: '2024', event: '拓展机械设备出口中东' },
+      ],
+      dashboard: [
+        { type: '订单', content: '阿联酋机械设备加单420万', date: '2026-06-16' },
+        { type: '风险', content: '客户集中度上升至73%', date: '2026-06-10' },
+      ],
+      alerts: [
+        { level: '高', title: '前两大买家占比超70%', desc: '合作稳定性承压', date: '2026-06-20' },
+      ],
+    },
+    partnerEval: {
+      supplier: {
+        dimensions: [
+          { dim: '质量', score: 75, weight: 20 }, { dim: '成本', score: 80, weight: 30 },
+          { dim: '交付', score: 72, weight: 20 }, { dim: '服务', score: 70, weight: 15 }, { dim: '风险', score: 68, weight: 15 },
+        ],
+        total: 78,
+        risks: ['1次行政处罚', '2次逾期付款'],
+      },
+      customer: {
+        dimensions: [
+          { dim: '信用', score: 70, weight: 30 }, { dim: '价值', score: 78, weight: 25 },
+          { dim: '战略匹配', score: 74, weight: 20 }, { dim: '稳定性', score: 65, weight: 25 },
+        ],
+        total: 72,
+        risks: ['订单波动大', '区域客户集中'],
+      },
+    },
+    benchmarks: {
+      recommended: [
+        { name: '新疆众和', type: '区域对标', industry: '跨境', score: 80 },
+        { name: '华贸进出口集团', type: '规模对标', industry: '进出口', score: 90 },
+      ],
+      gaps: [
+        { metric: '客户集中度', self: '73%', benchmark: '35%', gap: '+38ppt', factor: '区域客户依赖过高' },
+        { metric: '海外渗透率', self: '9国', benchmark: '22国', gap: '-13国', factor: '中东中亚外拓展不足' },
+        { metric: '毛利率', self: '12%', benchmark: '18%', gap: '-6ppt', factor: '议价能力偏弱' },
+      ],
+      practices: [
+        { title: '客户多元化', link: '降低单一买家依赖', domain: '风险管理' },
+        { title: '自贸协定路径', link: '提升中东中亚关税优惠利用率', domain: '合规成本' },
+      ],
+      actions: ['降低前两大买家占比至50%以下', '拓展东南亚转口', '完善信用条款'],
+    },
+    dueDiligence: { riskLevel: '中', checks: ['核查行政处罚详情', '确认中东客户真实性', '评估客户集中度风险'], summary: '区域特色明显，合作需加强信用监控与客户分散。' },
   },
 }
 
@@ -1643,6 +1933,40 @@ export function getEnterpriseDetail(name) {
 export function getCompetitorAnalysis(name) {
   const ent = getEnterpriseDetail(name)
   return ent.competitorAnalysis || ENTERPRISE_EXTENDED['华贸进出口集团'].competitorAnalysis
+}
+
+/** 39-metric radar for CompetitorTab: 财务(12)/市场(8)/产品(10)/运营(9) */
+export function buildMetric39Radar(entName) {
+  const analysis = getCompetitorAnalysis(entName)
+  const baseRows = analysis.radarCompare || []
+  const avgSelf = baseRows.length
+    ? baseRows.reduce((s, r) => s + (r.self || 70), 0) / baseRows.length
+    : 75
+  const avgRival1 = baseRows.length
+    ? baseRows.reduce((s, r) => s + (r.rival1 || 65), 0) / baseRows.length
+    : 68
+  const avgRival2 = baseRows.length
+    ? baseRows.reduce((s, r) => s + (r.rival2 != null ? r.rival2 : 60), 0) / baseRows.length
+    : 60
+
+  const catalog = [
+    { category: '财务', items: ['营收规模', '毛利率', '净利率', '资产负债率', '现金流', '应收账款周转', '存货周转', 'ROE', 'ROA', '费用率', '资本结构', '盈利稳定性'] },
+    { category: '市场', items: ['市场份额', '市场覆盖', '渠道密度', '品牌知名度', '客户留存', '新客获取', '区域渗透', '定价竞争力'] },
+    { category: '产品', items: ['产品广度', '品质一致性', '认证完备度', '研发投入', '专利储备', '迭代速度', '定制能力', '售后支持', '差异化', '合规达标'] },
+    { category: '运营', items: ['交付准时率', '交期柔性', '库存健康度', '供应链韧性', '数字化水平', '人均产值', '报关差错率', '物流成本', '协同效率'] },
+  ]
+
+  const clamp = (v) => Math.max(35, Math.min(98, Math.round(v)))
+  let idx = 0
+  return catalog.flatMap(({ category, items }) => items.map((item, i) => {
+    const seed = (idx + i * 3) % 11
+    const matched = baseRows.find((r) => r.item === item || r.item.includes(item) || item.includes(r.item))
+    idx += 1
+    const self = matched?.self ?? clamp(avgSelf + (seed - 5) * 2.2)
+    const rival1 = matched?.rival1 ?? clamp(avgRival1 + (seed - 4) * 2.0)
+    const rival2 = matched?.rival2 ?? clamp(avgRival2 + (seed - 6) * 1.8)
+    return { category, item, self, rival1, rival2 }
+  }))
 }
 
 export function getPartnerEvaluation(name, role = 'supplier') {
@@ -1696,6 +2020,12 @@ export function getMarketHeatmapCells(extended, timelinePoint) {
     nightlight: Math.round(cell.nightlight * (0.86 + factor * 0.14)),
     risk: Math.round(cell.risk * (1.05 - factor * 0.05)),
     climate: Math.round(cell.climate * (0.9 + factor * 0.1)),
+    cluster: Math.round((cell.cluster || cell.industry || 50) * (0.84 + factor * 0.16)),
+    resource: Math.round((cell.resource || 45) * (0.9 + factor * 0.1)),
+    hinterland: Math.round((cell.hinterland || cell.infra || 60) * (0.86 + factor * 0.14)),
+    disaster: Math.round((cell.disaster || 30) * (1.02 - factor * 0.02)),
+    industry: Math.round((cell.industry || 60) * (0.85 + factor * 0.15)),
+    infra: Math.round((cell.infra || 70) * (0.88 + factor * 0.12)),
   }))
 }
 
@@ -1732,6 +2062,8 @@ export function getMarketData(country, period, options = {}) {
     overview: {
       ...base.overview,
       marketSize: Math.round(base.overview.marketSize * overviewScale * 10) / 10,
+      volatility: calcTrendVolatility(trend),
+      growthPhase: calcGrowthPhase(trend),
     },
     trend,
     extended: rawExtended,
@@ -1739,6 +2071,26 @@ export function getMarketData(country, period, options = {}) {
     period,
     periodKey,
   }
+}
+
+function calcTrendVolatility(trend = []) {
+  if (trend.length < 2) return 0
+  const values = trend.map((t) => t.value)
+  const mean = values.reduce((s, v) => s + v, 0) / values.length
+  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length
+  return Math.round((Math.sqrt(variance) / (mean || 1)) * 1000) / 10
+}
+
+function calcGrowthPhase(trend = []) {
+  if (trend.length < 2) return '数据不足'
+  const last = trend[trend.length - 1]?.value || 0
+  const prev = trend[trend.length - 2]?.value || 0
+  const delta = last - prev
+  const pct = prev ? (delta / prev) * 100 : 0
+  if (pct > 5) return '加速增长'
+  if (pct > 0) return '温和增长'
+  if (pct > -5) return '增速放缓'
+  return '收缩下行'
 }
 
 export function getDemandSegments(country, category) {
@@ -1762,6 +2114,11 @@ export function getDemandSegments(country, category) {
       { topic: '品牌偏好', score: 64, trend: '稳定', source: '消费者调研' },
       { topic: '功能体验', score: 78, trend: '上升', source: '电商评论' },
     ],
+    preferenceMatrix: raw.preferenceMatrix || {
+      rows: ['豪华', '中高端', '经济型'],
+      cols: ['4S店/经销商', '线上渠道', 'B2B平台'],
+      values: [[10, 8, 4], [16, 12, 17], [16, 8, 9]],
+    },
   }
 }
 
@@ -1793,10 +2150,11 @@ export const LEADING_INDICATORS = {
     { name: '电商搜索热度', correlation: 0.65, lead: '1个月', weight: 0.16 },
   ],
   machinery: [
-    { name: '建筑业PMI', correlation: 0.79, lead: '3个月', weight: 0.30 },
-    { name: '固定资产投资', correlation: 0.74, lead: '4个月', weight: 0.25 },
-    { name: '钢材产量', correlation: 0.70, lead: '2个月', weight: 0.20 },
-    { name: '工业库存指数', correlation: -0.62, lead: '3个月', weight: 0.15 },
+    { name: '新屋开工许可', correlation: 0.84, lead: '4个月', weight: 0.26 },
+    { name: '建筑业PMI', correlation: 0.79, lead: '3个月', weight: 0.24 },
+    { name: '长期贷款利率', correlation: -0.71, lead: '5个月', weight: 0.18 },
+    { name: '钢材产量与库存', correlation: 0.70, lead: '2个月', weight: 0.16 },
+    { name: '固定资产投资', correlation: 0.74, lead: '4个月', weight: 0.16 },
   ],
   electronics: [
     { name: '半导体出货', correlation: 0.81, lead: '2个月', weight: 0.32 },
@@ -1826,26 +2184,93 @@ export const SCENARIO_PRESETS = [
 
 const MONTHS = ['2024-07', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06']
 
-export function getForecastData(country, category, horizon = 1) {
-  const base = country === 'usa' ? 420 : country === 'asean' ? 165 : 325
-  const growth = category === 'electronics' ? 1.12 : category === 'vehicle' ? 1.06 : 1.08
+function parseShockLagMonths(lag) {
+  if (!lag || lag === '即时') return 0
+  const n = Number.parseInt(String(lag), 10)
+  return Number.isFinite(n) ? n : 0
+}
+
+function applyShockBumps(series, shocks = []) {
+  const enabled = (shocks || []).filter((s) => s.enabled)
+  if (!enabled.length) return series
+  return series.map((point, i) => {
+    let factor = 1
+    enabled.forEach((s) => {
+      const start = parseShockLagMonths(s.lag)
+      // temporary demand bump lasting ~3 forecast periods after lag
+      if (i >= start && i < start + 3) {
+        factor *= 1 + (Number(s.impact) || 0) / 100
+      }
+    })
+    return { ...point, value: Math.round(point.value * factor * 10) / 10 }
+  })
+}
+
+export function getForecastData(country, category, horizon = 1, options = {}) {
+  const { shocks = [] } = options || {}
+  const countryBase = { germany: 325, usa: 420, asean: 165, japan: 380, brazil: 210 }
+  const growthMap = {
+    vehicle: 1.06,
+    machinery: 1.08,
+    electronics: 1.12,
+    agri: 1.05,
+  }
+  const base = countryBase[country] || countryBase.germany
+  const growth = growthMap[category] || 1.08
+
+  const gapsByCategory = {
+    vehicle: [
+      { segment: '纯电SUV', growth: 35, type: 'accelerating', label: '需求加速' },
+      { segment: '混动轿车', growth: 18, type: 'accelerating', label: '细分爆发' },
+      { segment: '传统燃油轿车', growth: -8, type: 'declining', label: '结构性收缩' },
+      { segment: '二手设备翻新', growth: 0, type: 'whitespace', label: '潜在空白' },
+    ],
+    machinery: [
+      { segment: '数控机床', growth: 14, type: 'accelerating', label: '需求加速' },
+      { segment: '工业机器人', growth: 22, type: 'accelerating', label: '细分爆发' },
+      { segment: '通用机械', growth: 3, type: 'stable', label: '稳健增长' },
+      { segment: '绿色建材设备', growth: 0, type: 'whitespace', label: '潜在空白' },
+    ],
+    electronics: [
+      { segment: '智能手机', growth: 15, type: 'accelerating', label: '需求加速' },
+      { segment: '可穿戴', growth: 22, type: 'accelerating', label: '细分爆发' },
+      { segment: '传统PC', growth: -5, type: 'declining', label: '结构性收缩' },
+      { segment: '工业传感器', growth: 0, type: 'whitespace', label: '潜在空白' },
+    ],
+    agri: [
+      { segment: '大豆', growth: 8, type: 'accelerating', label: '需求加速' },
+      { segment: '牛肉', growth: 5, type: 'stable', label: '稳健增长' },
+      { segment: '粮食加工', growth: 12, type: 'accelerating', label: '细分爆发' },
+      { segment: '有机农产品', growth: 0, type: 'whitespace', label: '潜在空白' },
+    ],
+  }
+
   const historical = MONTHS.slice(0, 12).map((m, i) => ({
     month: m,
     actual: Math.round(base * (0.85 + i * 0.012) * 10) / 10,
     type: '历史',
   }))
   const forecastMonths = horizon === 1 ? MONTHS.slice(12, 24) : horizon === 3 ? MONTHS.slice(12) : ['2027', '2028', '2029', '2030', '2031']
-  const baseline = forecastMonths.map((m, i) => ({
+  let baseline = forecastMonths.map((m, i) => ({
     month: m,
     value: Math.round(base * growth ** (i / 12) * (1 + i * 0.008) * 10) / 10,
     type: '基准',
   }))
-  const optimistic = baseline.map((b, i) => ({ ...b, value: Math.round(b.value * (1 + 0.05 + i * 0.003) * 10) / 10, type: '乐观' }))
-  const pessimistic = baseline.map((b, i) => ({ ...b, value: Math.round(b.value * (1 - 0.08 - i * 0.002) * 10) / 10, type: '悲观' }))
+  let optimistic = baseline.map((b, i) => ({ ...b, value: Math.round(b.value * (1 + 0.05 + i * 0.003) * 10) / 10, type: '乐观' }))
+  let pessimistic = baseline.map((b, i) => ({ ...b, value: Math.round(b.value * (1 - 0.08 - i * 0.002) * 10) / 10, type: '悲观' }))
+
+  baseline = applyShockBumps(baseline, shocks)
+  optimistic = applyShockBumps(optimistic, shocks)
+  pessimistic = applyShockBumps(pessimistic, shocks)
+
+  const mape = country === 'asean' ? 8.1 : category === 'electronics' ? 6.8 : 7.2
 
   return {
+    country,
+    category,
+    horizon,
     ensemble: 'SARIMA(40%) + XGBoost(60%) 加权集成',
-    mape: 7.2,
+    mape,
     decomposition: [
       { component: '趋势项', share: 62, desc: '长期结构性增长' },
       { component: '周期项', share: 28, desc: '季节性波动' },
@@ -1855,20 +2280,46 @@ export function getForecastData(country, category, horizon = 1) {
     baseline,
     optimistic,
     pessimistic,
-    gaps: [
-      { segment: '纯电SUV', growth: 35, type: 'accelerating', label: '需求加速' },
-      { segment: '高端传感器', growth: 22, type: 'accelerating', label: '细分爆发' },
-      { segment: '传统燃油轿车', growth: -8, type: 'declining', label: '结构性收缩' },
-      { segment: '二手设备翻新', growth: 0, type: 'whitespace', label: '潜在空白' },
-    ],
+    gaps: gapsByCategory[category] || gapsByCategory.vehicle,
     forecastTable: baseline.map((b, i) => ({
       period: b.month,
       baseline: b.value,
       optimistic: optimistic[i].value,
       pessimistic: pessimistic[i].value,
-      errorBand: '±6.5%',
+      errorBand: `±${(5.5 + i * 0.08).toFixed(1)}%`,
     })),
   }
+}
+
+export function buildForecastTrendChart(forecast) {
+  const hist = (forecast.historical || []).map((h) => ({
+    month: h.month,
+    actual: h.actual,
+    baseline: null,
+    upper: null,
+    lower: null,
+  }))
+  const future = (forecast.baseline || []).map((b, i) => {
+    const err = b.value * (0.055 + i * 0.008)
+    return {
+      month: b.month,
+      actual: null,
+      baseline: b.value,
+      upper: Math.round((b.value + err) * 10) / 10,
+      lower: Math.round((b.value - err) * 10) / 10,
+    }
+  })
+  return [...hist, ...future]
+}
+
+export function buildEnsembleLabel(models = []) {
+  const selected = models.filter((m) => m.selected)
+  if (!selected.length) return '待训练 · 请运行回溯测试'
+  const weights = selected.map((m, i) => {
+    const w = Math.round(100 / selected.length + (selected.length - i) * 2)
+    return `${m.name}(${w}%)`
+  })
+  return `${weights.join(' + ')} 加权集成`
 }
 
 export function buildMonteCarloFan(baseline, runs = 1000) {
@@ -1884,15 +2335,30 @@ export function buildMonteCarloFan(baseline, runs = 1000) {
   return { fan, runs }
 }
 
-export function applyScenarioForecast(baseline, scenario) {
-  const gdpFactor = 1 + (scenario.gdpDelta || 0) * 0.04
-  const materialFactor = 1 - (scenario.materialDelta || 0) * 0.003
-  const policyFactor = scenario.policyShock ? 0.92 : 1
-  return baseline.map((b, i) => ({
+export function applyScenarioForecast(baseline, scenario = {}, shocks = []) {
+  const custom = scenario.customScenario || scenario
+  const shockList = Array.isArray(shocks) && shocks.length
+    ? shocks
+    : (scenario.shocks || custom.shocks || [])
+  const gdpFactor = 1 + (custom.gdpDelta || 0) * 0.04
+  const materialFactor = 1 - (custom.materialDelta || 0) * 0.003
+  const policyFactor = custom.policyShock ? 0.92 : 1
+  const fxFactor = 1 + (custom.fxDelta || 0) * 0.01
+  const rateFactor = 1 - (custom.rateDelta || 0) * 0.008
+  const rivalFactor = 1 - (custom.rivalShareDelta || 0) * 0.005
+  const inventoryFactor = 1 + (custom.inventoryDelta || 0) * 0.002
+  const freightFactor = 1 - (custom.freightDelta || 0) * 0.004
+  const energyFactor = 1 - (custom.energyDelta || 0) * 0.003
+  const demandFactor = 1 + (custom.demandPulse || 0) * 0.01
+  const macroFactor = gdpFactor * materialFactor * policyFactor * fxFactor * rateFactor
+    * rivalFactor * inventoryFactor * freightFactor * energyFactor * demandFactor
+
+  const adjusted = baseline.map((b, i) => ({
     ...b,
-    value: Math.round(b.value * gdpFactor * materialFactor * policyFactor * (1 + i * 0.001) * 10) / 10,
-    type: scenario.name || '自定义',
+    value: Math.round(b.value * macroFactor * (1 + i * 0.001) * 10) / 10,
+    type: scenario.name || custom.name || '自定义',
   }))
+  return applyShockBumps(adjusted, shockList)
 }
 
 const COMPETITOR_PROFILES = {
@@ -1919,12 +2385,19 @@ const COMPETITOR_PROFILES = {
         { period: '2026Q1', top1: 21, top3: 59, hhi: 1435 },
       ],
       positioning: [
-        { name: '我司（示例）', price: 62, quality: 78, brand: 55, channel: 48, service: 72, isSelf: true },
-        { name: '大众', price: 58, quality: 75, brand: 82, channel: 88, service: 70, isSelf: false },
-        { name: '奔驰', price: 88, quality: 92, brand: 95, channel: 85, service: 88, isSelf: false },
-        { name: '宝马', price: 85, quality: 90, brand: 92, channel: 82, service: 85, isSelf: false },
-        { name: '特斯拉', price: 72, quality: 80, brand: 78, channel: 65, service: 62, isSelf: false },
-        { name: 'Stellantis', price: 52, quality: 68, brand: 65, channel: 75, service: 68, isSelf: false },
+        { name: '我司（示例）', price: 62, quality: 78, brand: 55, channel: 48, service: 72, pcaX: 55, pcaY: 66, isSelf: true },
+        { name: '大众', price: 58, quality: 75, brand: 82, channel: 88, service: 70, pcaX: 73, pcaY: 78, isSelf: false },
+        { name: '奔驰', price: 88, quality: 92, brand: 95, channel: 85, service: 88, pcaX: 86, pcaY: 94, isSelf: false },
+        { name: '宝马', price: 85, quality: 90, brand: 92, channel: 82, service: 85, pcaX: 84, pcaY: 91, isSelf: false },
+        { name: '特斯拉', price: 72, quality: 80, brand: 78, channel: 65, service: 62, pcaX: 68, pcaY: 79, isSelf: false },
+        { name: 'Stellantis', price: 52, quality: 68, brand: 65, channel: 75, service: 68, pcaX: 64, pcaY: 66, isSelf: false },
+      ],
+      pcaAxes: { xLabel: 'PC1 价格-渠道', yLabel: 'PC2 品质-品牌' },
+      billOfLading: [
+        { blNo: 'HLCUDE26060188', shipper: '华贸进出口集团', consignee: '德意志工业代理', hs: '8708.99', containers: 12, route: '深圳→汉堡', eta: '2026-07-18' },
+        { blNo: 'MAEU26061402', shipper: '万向集团', consignee: '大众集团采购中心', hs: '8708.30', containers: 8, route: '宁波→不来梅', eta: '2026-07-22' },
+        { blNo: 'COSCO26062011', shipper: '博世亚太', consignee: '宝马莱比锡工厂', hs: '8708.99', containers: 6, route: '上海→汉堡', eta: '2026-07-25' },
+        { blNo: 'MSCUD26062844', shipper: '大陆集团', consignee: 'Stellantis欧洲仓', hs: '8708.29', containers: 10, route: '青岛→鹿特丹', eta: '2026-07-28' },
       ],
       intelFeed: [
         { date: '2026-06-18', source: '官网', type: '新品发布', title: '奔驰发布新一代纯电平台', competitor: '奔驰' },
@@ -2154,27 +2627,55 @@ export const HS_PRODUCT_OPTIONS = [
   { value: '8541', label: 'HS8541 · 半导体' },
 ]
 
-export function getCompetitionData(country, category) {
-  const base = COMPETITOR_PROFILES[country]?.[category] || COMPETITOR_PROFILES[country]?.vehicle || COMPETITOR_PROFILES.germany.vehicle
-  const shareChart = base.competitors.filter((c) => c.name !== '其他').map((c) => ({ name: c.name, value: c.share, isSelf: c.isSelf }))
-  const positioningScatter = base.positioning.map((p) => ({
-    name: p.name,
-    x: p.price,
-    y: p.quality,
-    size: p.brand,
-    isSelf: p.isSelf,
+export function getCompetitionData(country, category, metric = 'sales') {
+  const profileCountry = COMPETITOR_PROFILES[country] ? country : 'germany'
+  const profileCategory = COMPETITOR_PROFILES[profileCountry]?.[category]
+    ? category
+    : (COMPETITOR_PROFILES[profileCountry]?.vehicle ? 'vehicle' : Object.keys(COMPETITOR_PROFILES[profileCountry] || {})[0])
+  const base = COMPETITOR_PROFILES[profileCountry]?.[profileCategory] || COMPETITOR_PROFILES.germany.vehicle
+  const metricFactor = metric === 'volume' ? 0.92 : metric === 'import' ? 1.08 : 1
+  const scaledCompetitors = base.competitors.map((c) => ({
+    ...c,
+    share: Math.max(1, Math.round(c.share * metricFactor * (c.isSelf && metric === 'import' ? 0.85 : 1))),
   }))
+  // normalize approximate to 100 for non-其他 entries visual
+  const shareChart = scaledCompetitors
+    .filter((c) => c.name !== '其他')
+    .map((c) => ({ name: c.name, value: c.share, isSelf: c.isSelf, metric }))
+  const positioningScatter = base.positioning.map((p) => {
+    const usePca = !!base.pcaAxes
+    return {
+      name: p.name,
+      x: usePca ? (p.pcaX ?? Math.round((p.price + p.channel) / 2)) : p.price,
+      y: usePca ? (p.pcaY ?? Math.round((p.quality + p.brand) / 2)) : p.quality,
+      size: p.brand,
+      isSelf: p.isSelf,
+      xLabel: base.pcaAxes?.xLabel,
+      yLabel: base.pcaAxes?.yLabel,
+    }
+  })
   const priceLines = (base.priceTrack || []).flatMap((row) => [
     { month: row.month, price: row.self, series: '我司' },
     { month: row.month, price: row.rivalA, series: '竞品A' },
     { month: row.month, price: row.rivalB, series: '竞品B' },
   ])
-  return { ...base, shareChart, positioningScatter, priceLines }
+  return {
+    ...base,
+    competitors: scaledCompetitors,
+    shareChart,
+    positioningScatter,
+    pcaAxes: base.pcaAxes || null,
+    billOfLading: base.billOfLading || [],
+    priceLines,
+    metric,
+    dataScope: `${profileCountry}/${profileCategory}`,
+    fallback: profileCountry !== country || profileCategory !== category,
+  }
 }
 
 export function getPolicyData(country, hsCode = '8507') {
   const base = POLICY_CATALOG[country] || POLICY_CATALOG.germany
-  const matchedDocs = base.documents.filter((d) => !hsCode || d.hsCodes?.includes(hsCode) || d.hsCodes?.length > 2)
+  const matchedDocs = base.documents.filter((d) => !hsCode || d.hsCodes?.includes(hsCode))
   const checklist = base.complianceChecklist.filter((c) => {
     if (hsCode === '8507') return c.regulation.includes('电池') || c.regulation.includes('CBAM') || c.regulation.includes('REACH')
     if (hsCode === '8703') return c.regulation.includes('CBAM') || c.regulation.includes('原产地') || c.regulation.includes('REACH')

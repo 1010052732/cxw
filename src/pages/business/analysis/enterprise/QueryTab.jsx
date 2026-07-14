@@ -26,8 +26,10 @@ import {
 import {
   ENTERPRISE_SORT_OPTIONS,
   getEnterpriseDetail,
+  resolveMarketCountryValue,
   searchEnterprises,
 } from '../../../../mock/analysis'
+import { exportCsv } from '../analysisExport'
 import {
   GEO_MACRO_OPTIONS,
   formatGeoLocation,
@@ -63,6 +65,13 @@ export default function EnterpriseQueryTab({ enterpriseName, onEnterpriseChange,
   )
   const ent = useMemo(() => getEnterpriseDetail(enterpriseName), [enterpriseName])
 
+  const equityNodes = ent.equityGraph?.nodes || []
+  const equityEdges = ent.equityGraph?.edges || []
+  const equityNodeMap = useMemo(
+    () => Object.fromEntries(equityNodes.map((n) => [n.id, n])),
+    [equityNodes],
+  )
+
   const revenueLine = (ent.revenueTrend || []).map((r) => ({ year: r.year, value: r.revenue, type: '营收(亿元)' }))
 
   const handleSearch = () => {
@@ -90,7 +99,25 @@ export default function EnterpriseQueryTab({ enterpriseName, onEnterpriseChange,
         <Select value={geoCity} style={{ width: 120 }} options={geoCityOptions} disabled={geoCountry === 'all'} onChange={setGeoCity} />
         <Button onClick={handleResetGeo}>重置地区</Button>
         <Select value={sortBy} style={{ width: 120 }} options={ENTERPRISE_SORT_OPTIONS} onChange={setSortBy} />
-        <Button icon={<CloudDownloadOutlined />} onClick={() => message.success('企业档案已导出')}>导出</Button>
+        <Button
+          icon={<CloudDownloadOutlined />}
+          onClick={() => {
+            exportCsv(`enterprise-${ent.name}.csv`, ['field', 'value'], [
+              { field: '企业', value: ent.name },
+              { field: '编号', value: ent.id },
+              { field: '类型', value: ent.type },
+              { field: '所在地', value: formatGeoLocation(ent) },
+              { field: '健康度', value: `${ent.healthLevel}(${ent.healthScore})` },
+              { field: '信用', value: `${ent.creditLevel}(${ent.creditScore})` },
+              { field: '专利', value: ent.patents },
+              { field: '诉讼', value: ent.litigation },
+              { field: '处罚', value: ent.penalties },
+            ])
+            message.success('企业档案 CSV 已下载')
+          }}
+        >
+          导出
+        </Button>
       </div>
 
       {results.length > 1 && (
@@ -164,9 +191,35 @@ export default function EnterpriseQueryTab({ enterpriseName, onEnterpriseChange,
           <div className="business-panel">
             <h3 className="business-panel-title"><NodeIndexOutlined /> 股权与关联网络</h3>
             <Paragraph type="secondary">节点颜色：红色=主体 · 蓝色=母公司 · 绿色=子公司 · 橙色=合作伙伴</Paragraph>
-            <div className="enterprise-graph-preview">
-              {(ent.equityGraph?.nodes || []).map((n) => (
-                <Tag key={n.id} color={nodeColor[n.type] || 'default'} style={{ marginBottom: 4 }}>{n.label}</Tag>
+            <div className="enterprise-graph-canvas">
+              {equityEdges.length > 0 && (
+                <svg className="eg-edges" aria-hidden="true">
+                  {equityEdges.map((e, i) => {
+                    const from = equityNodeMap[e.from]
+                    const to = equityNodeMap[e.to]
+                    if (!from || !to) return null
+                    return (
+                      <line
+                        key={`${e.from}-${e.to}-${i}`}
+                        x1={`${from.x}%`}
+                        y1={`${from.y}%`}
+                        x2={`${to.x}%`}
+                        y2={`${to.y}%`}
+                        stroke="#bfbfbf"
+                        strokeWidth={1.5}
+                      />
+                    )
+                  })}
+                </svg>
+              )}
+              {equityNodes.map((n) => (
+                <div
+                  key={n.id}
+                  className="eg-node"
+                  style={{ left: `${n.x}%`, top: `${n.y}%`, background: nodeColor[n.type] || '#8c8c8c' }}
+                >
+                  {n.label}
+                </div>
               ))}
             </div>
             <Table
@@ -192,9 +245,31 @@ export default function EnterpriseQueryTab({ enterpriseName, onEnterpriseChange,
               columns={[
                 { title: '日期', dataIndex: 'date', key: 'date', width: 100 },
                 { title: '类型', dataIndex: 'type', key: 'type', width: 60 },
-                { title: '产品', dataIndex: 'product', key: 'product' },
+                {
+                  title: '产品',
+                  dataIndex: 'product',
+                  key: 'product',
+                  render: (v) => (
+                    <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/analysis/product?q=${encodeURIComponent(v)}&tab=query`)}>
+                      {v}
+                    </Button>
+                  ),
+                },
                 { title: '金额', dataIndex: 'amount', key: 'amount', width: 90 },
-                { title: '市场', dataIndex: 'country', key: 'country', width: 80 },
+                {
+                  title: '市场',
+                  dataIndex: 'country',
+                  key: 'country',
+                  width: 90,
+                  render: (v) => {
+                    const code = resolveMarketCountryValue(v)
+                    return code ? (
+                      <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/analysis/market?country=${code}&tab=overview`)}>
+                        {v}
+                      </Button>
+                    ) : v
+                  },
+                },
               ]}
             />
             <Space wrap style={{ marginTop: 12 }}>

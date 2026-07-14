@@ -33,7 +33,12 @@ function scaleSnapshot(base, factor) {
 }
 
 function buildCities(region) {
-  if (region.cities?.length) return region.cities
+  if (region.cities?.length) {
+    return region.cities.map((c) => ({
+      ...c,
+      snapshot: enrichRegionSnapshot(c.snapshot, c.name),
+    }))
+  }
   const names = CITY_NAMES[region.id] || [`${region.name}核心城`, `${region.name}次级城`]
   return names.map((name, ci) => {
     const x = Math.min(92, Math.max(8, region.x + (ci - 1) * 5))
@@ -44,12 +49,12 @@ function buildCities(region) {
       x,
       y,
       parentId: region.id,
-      snapshot: {
+      snapshot: enrichRegionSnapshot({
         ...region.snapshot,
         population: region.snapshot?.population,
         urbanization: `${68 + ci * 4}%`,
         incomeLevel: ci === 0 ? '高' : ci === 1 ? '中' : '中低',
-      },
+      }, name),
       postals: [
         {
           id: `${region.id}-c${ci}-p0`,
@@ -77,6 +82,7 @@ function buildInfraNodes(regions) {
     { type: 'port', icon: 'port', label: '港口' },
     { type: 'airport', icon: 'airport', label: '机场' },
     { type: 'rail', icon: 'rail', label: '铁路枢纽' },
+    { type: 'highway', icon: 'highway', label: '公路枢纽' },
     { type: 'ftz', icon: 'ftz', label: '自贸区' },
   ]
   return regions.flatMap((r, ri) =>
@@ -100,14 +106,102 @@ function buildLogisticsPaths(regions) {
   ]
 }
 
+function buildHighwayNetwork(regions) {
+  if (regions.length < 2) return []
+  return regions.slice(0, -1).map((r, i) => {
+    const next = regions[i + 1]
+    return {
+      id: `hw-${r.id}-${next.id}`,
+      from: { x: r.x, y: r.y },
+      to: { x: next.x, y: next.y },
+      label: `${r.name}—${next.name}公路走廊`,
+    }
+  })
+}
+
+function buildOverlayNodes(regions) {
+  const types = [
+    { layer: 'cluster', icon: '🏭', label: '制造集群' },
+    { layer: 'resource', icon: '⛏️', label: '资源区' },
+    { layer: 'industry', icon: '🏢', label: '产业园' },
+    { layer: 'hinterland', icon: '🚢', label: '港口腹地' },
+    { layer: 'disaster', icon: '⚠️', label: '灾害史' },
+    { layer: 'ftz', icon: '🌐', label: '自贸区' },
+  ]
+  return regions.flatMap((r, ri) =>
+    types.slice(0, 3 + (ri % 3)).map((t, ti) => ({
+      id: `overlay-${r.id}-${t.layer}`,
+      layer: t.layer,
+      icon: t.icon,
+      label: `${r.name}${t.label}`,
+      x: Math.min(92, r.x + ti * 5 - 4),
+      y: Math.min(88, r.y + ti * 4 + 3),
+      regionId: r.id,
+      score: 60 + (ri + ti) * 8,
+    })),
+  )
+}
+
+export function enrichRegionSnapshot(snapshot = {}, regionName = '') {
+  const base = { ...snapshot }
+  const importVal = parseFloat(String(base.import || '800').replace(/[^\d.]/g, '')) || 800
+  const exportVal = parseFloat(String(base.export || '900').replace(/[^\d.]/g, '')) || 900
+  return {
+    ...base,
+    inflation: base.inflation || '2.1%',
+    unemployment: base.unemployment || '3.4%',
+    incomeLevel: base.incomeLevel || '中高',
+    fxVolatility: base.fxVolatility || 'EUR/CNY 波动 ±4.2%',
+    ageDistribution: base.ageDistribution || '25-44岁占42% · 45-64岁占36%',
+    consumptionStructure: base.consumptionStructure || '耐用品32% · 服务48% · 必需品20%',
+    industryPrimary: base.industryPrimary || '1.2%',
+    industrySecondary: base.industrySecondary || '28.6%',
+    industryTertiary: base.industryTertiary || '70.2%',
+    dominantIndustry: base.dominantIndustry || `${regionName || '区域'}汽车制造/精密机械`,
+    clusterMaturity: base.clusterMaturity || '成熟',
+    tradeBalance: base.tradeBalance || (exportVal >= importVal ? `顺差 ${Math.round(exportVal - importVal)}亿` : `逆差 ${Math.round(importVal - exportVal)}亿`),
+    mainPartners: base.mainPartners || '中国、荷兰、法国、美国',
+    mainCategories: base.mainCategories || '机电、汽车配件、化工',
+    corruptionIndex: base.corruptionIndex ?? 78,
+    businessEnv: base.business ?? base.businessEnv ?? 80,
+  }
+}
+
+export function getTimelineContext(extended, timelinePoint) {
+  if (!timelinePoint) return null
+  const t = extended?.timeline?.find((x) => x.year === timelinePoint.year || x.label === timelinePoint.label) || timelinePoint
+  return {
+    year: t.year || t.label,
+    marketSize: t.value,
+    event: t.event,
+    priceIndex: t.priceIndex ?? 100,
+    fxRate: t.fxRate ?? '—',
+    policyTag: t.policyTag ?? '—',
+    diffusion: t.diffusion || '需求由核心城市向周边扩散',
+  }
+}
+
 export function enrichMarketExtended(extended) {
   if (!extended) return extended
-  const regions = (extended.regions || []).map((r) => ({ ...r, cities: buildCities(r) }))
+  const regions = (extended.regions || []).map((r) => ({
+    ...r,
+    snapshot: enrichRegionSnapshot(r.snapshot, r.name),
+    cities: buildCities(r).map((c) => ({
+      ...c,
+      snapshot: enrichRegionSnapshot(c.snapshot, c.name),
+      postals: (c.postals || []).map((p) => ({
+        ...p,
+        snapshot: enrichRegionSnapshot(p.snapshot, p.name),
+      })),
+    })),
+  }))
   return {
     ...extended,
     regions,
     infraNodes: extended.infraNodes || buildInfraNodes(regions),
     logisticsPaths: extended.logisticsPaths || buildLogisticsPaths(regions),
+    highwayNetwork: extended.highwayNetwork || buildHighwayNetwork(regions),
+    overlayNodes: extended.overlayNodes || buildOverlayNodes(regions),
   }
 }
 
@@ -255,9 +349,17 @@ export function getTrendXLabel(period) {
 }
 
 export function matchSegmentToCells(segmentName, cells) {
-  if (!segmentName || !cells.length) return cells.map((c) => c.id)
+  if (!segmentName || !cells.length) return []
   const key = segmentName.toLowerCase()
-  return cells
-    .filter((c) => c.label?.includes(segmentName) || c.id?.includes(key.slice(0, 2)))
-    .map((c) => c.id)
+  const matched = cells.filter((c) => {
+    const label = (c.label || '').toLowerCase()
+    const id = (c.id || '').toLowerCase()
+    return label.includes(segmentName)
+      || label.includes(key)
+      || id.includes(key.slice(0, 2))
+      || (key.includes('suv') && (label.includes('巴伐利亚') || label.includes('南部')))
+      || (key.includes('纯电') && label.includes('西'))
+      || (key.includes('轿车') && (label.includes('北威') || label.includes('沿海')))
+  })
+  return matched.map((c) => c.id)
 }

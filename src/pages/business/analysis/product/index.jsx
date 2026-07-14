@@ -10,6 +10,7 @@ import {
   ShopOutlined,
   SwapOutlined,
 } from '@ant-design/icons'
+import AnalysisWorkflowBar from '../AnalysisWorkflowBar'
 import QueryTab from './QueryTab'
 import PriceTab from './PriceTab'
 import SupplyDemandTab from './SupplyDemandTab'
@@ -54,6 +55,16 @@ export default function AnalysisProductPage() {
         <p className="page-description">查询 → 价格 → 供需 → 壁垒 · 四维闭环 · 支撑采购、定价与合规决策</p>
       </div>
 
+      <AnalysisWorkflowBar
+        active="product"
+        context={{
+          q: productName,
+          hs: searchParams.get('hs') || undefined,
+          country: searchParams.get('country') || undefined,
+          tab: activeTab,
+        }}
+      />
+
       <div className="business-filter-bar">
         <Space wrap>
           <Text>快捷查询</Text>
@@ -68,8 +79,8 @@ export default function AnalysisProductPage() {
           <Button type="link" size="small" onClick={() => changeTab('price')}>价格</Button>
           <Button type="link" size="small" onClick={() => changeTab('supply')}>供需</Button>
           <Button type="link" size="small" onClick={() => changeTab('barrier')}>壁垒</Button>
-          <Button type="link" icon={<GlobalOutlined />} onClick={() => navigate('/analysis/market')}>市场分析</Button>
-          <Button type="link" icon={<ShopOutlined />} onClick={() => navigate('/analysis/enterprise')}>企业分析</Button>
+          <Button type="link" icon={<GlobalOutlined />} onClick={() => navigate(`/analysis/market?country=germany&tab=overview`)}>市场分析</Button>
+          <Button type="link" icon={<ShopOutlined />} onClick={() => navigate(`/analysis/enterprise?q=${encodeURIComponent('华贸进出口集团')}&tab=query`)}>企业分析</Button>
         </Space>
       </div>
 
