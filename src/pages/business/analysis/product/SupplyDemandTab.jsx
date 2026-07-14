@@ -21,12 +21,13 @@ import {
   ThunderboltOutlined,
 } from '@ant-design/icons'
 import { getSupplyDemandData } from '../../../../mock/analysis'
+import ProductSwitcher from './ProductSwitcher'
 
 const { Text, Paragraph } = Typography
 
 const statusColor = { 短缺: 'error', 紧平衡: 'warning', 过剩: 'default', 严重过剩: 'processing' }
 
-export default function SupplyDemandTab({ productName, onGoBarrier }) {
+export default function SupplyDemandTab({ productName, skuLabel, onProductChange, onGoBarrier }) {
   const { message } = App.useApp()
   const [simulated, setSimulated] = useState(false)
 
@@ -52,9 +53,8 @@ export default function SupplyDemandTab({ productName, onGoBarrier }) {
   return (
     <>
       <div className="business-filter-bar">
-        <Space>
-          <Text>当前商品</Text>
-          <Tag color="processing">{productName}</Tag>
+        <Space wrap>
+          <ProductSwitcher productName={productName} skuLabel={skuLabel} onProductChange={onProductChange} />
           <Tag color={balance.marketStatus === '供不应求' ? 'error' : 'warning'}>{balance.marketStatus}</Tag>
         </Space>
         <Space>

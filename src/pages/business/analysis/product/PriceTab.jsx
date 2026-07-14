@@ -44,10 +44,11 @@ import {
   loadPriceAlertSettings,
   savePriceAlertSettings,
 } from './priceAnalysisStore'
+import ProductSwitcher from './ProductSwitcher'
 
 const { Text, Paragraph, Title } = Typography
 
-export default function PriceTab({ productName, onGoSupply }) {
+export default function PriceTab({ productName, skuLabel, onProductChange, onGoSupply }) {
   const { message, notification } = App.useApp()
   const [granularity, setGranularity] = useState('month')
   const [timeRange, setTimeRange] = useState('6m')
@@ -132,8 +133,7 @@ export default function PriceTab({ productName, onGoSupply }) {
 
       <div className="business-filter-bar">
         <Space wrap>
-          <Text>商品</Text>
-          <Tag color="processing">{productName}</Tag>
+          <ProductSwitcher productName={productName} skuLabel={skuLabel} onProductChange={onProductChange} />
           <Text>时间区间</Text>
           <Select value={timeRange} style={{ width: 100 }} options={PRICE_TIME_RANGES} onChange={setTimeRange} />
           <Text>数据粒度</Text>

@@ -1633,6 +1633,57 @@
 .policy-graph-node-policy { color: #B32620; }
 .policy-graph-node-product { color: #1677ff; }
 .policy-graph-node-enterprise { color: #52c41a; }
+.product-query-hero {
+  margin-bottom: 16px;
+}
+
+.product-query-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.product-search-modal.ant-modal {
+  max-width: calc(100vw - 48px);
+}
+
+.product-search-modal .ant-modal-content {
+  width: 100%;
+}
+
+.product-search-modal-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.product-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.product-filter-chips-label {
+  min-width: 64px;
+  line-height: 24px;
+}
+
+.product-search-modal-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 12px;
+}
+
+.product-result-row-active td {
+  background: rgba(179, 38, 32, 0.06) !important;
+}
+
 .product-archive-visual {
   display: flex;
   flex-direction: column;

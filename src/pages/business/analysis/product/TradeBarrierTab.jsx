@@ -30,6 +30,7 @@ import {
   getTradeBarrierData,
 } from '../../../../mock/analysis'
 import { downloadTextFile, exportCsv } from '../analysisExport'
+import ProductSwitcher from './ProductSwitcher'
 
 const { Text, Paragraph } = Typography
 
@@ -37,7 +38,7 @@ const BARRIER_TYPE_COLOR = {
   关税: 'error', TBT: 'warning', SPS: 'orange', 反倾销: 'red', 出口管制: 'purple', 配额: 'default',
 }
 
-export default function TradeBarrierTab({ productName }) {
+export default function TradeBarrierTab({ productName, skuLabel, onProductChange }) {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [country, setCountry] = useState('all')
@@ -75,14 +76,13 @@ export default function TradeBarrierTab({ productName }) {
     <>
       <div className="business-filter-bar">
         <Space wrap>
-          <Text>商品</Text>
-          <Tag color="processing">{productName}</Tag>
+          <ProductSwitcher productName={productName} skuLabel={skuLabel} onProductChange={onProductChange} />
           <Text>HS {product.codes?.hs || product.hsCode}</Text>
           <Select value={country} style={{ width: 120 }} options={BARRIER_COUNTRY_OPTIONS} onChange={setCountry} />
           <Select
             value={barrierType}
             style={{ width: 140 }}
-            options={[{ value: 'all', label: '全部壁垒类型' }, ...(BARRIER_TYPE_OPTIONS || []).map((t) => ({ value: t, label: t }))]}
+            options={[{ value: 'all', label: '全部壁垒类型' }, ...(BARRIER_TYPE_OPTIONS || [])]}
             onChange={setBarrierType}
           />
         </Space>

@@ -1081,6 +1081,35 @@ export const TRADE_MODE_OPTIONS = [
   { value: 'crossborder', label: '跨境电商' },
 ]
 
+/** 商品库目录（列表弹窗检索用），name 为展示名，parent 映射到 PRODUCT_CATALOG */
+export const PRODUCT_DIRECTORY = [
+  { id: 'auto-parts', name: '汽车配件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.99', category: '汽车配件', spec: '发动机/底盘/车身附件', origin: '中国', markets: ['德国', '美国', '日本', '巴西'], tradeMode: 'general', tradeIndex: 86, priceAvg: 142, keywords: ['汽配', '零部件', 'auto parts'] },
+  { id: 'brake-pad', name: '刹车片', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.30', category: '汽车配件', spec: '陶瓷/半金属制动片', origin: '中国', markets: ['德国', '美国', '墨西哥'], tradeMode: 'general', tradeIndex: 88, priceAvg: 136, keywords: ['brake pad', '制动片', '刹车'] },
+  { id: 'chassis', name: '底盘系统件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.80', category: '汽车配件', spec: '悬架/转向模块', origin: '德国', markets: ['德国', '美国', '日本'], tradeMode: 'processing', tradeIndex: 82, priceAvg: 158, keywords: ['底盘', '悬架', '转向'] },
+  { id: 'engine-parts', name: '发动机零部件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.91', category: '汽车配件', spec: '活塞/涡轮相关件', origin: '中国', markets: ['东盟', '巴西', '印度'], tradeMode: 'general', tradeIndex: 79, priceAvg: 145, keywords: ['发动机', '活塞', '涡轮'] },
+  { id: 'electronics', name: '电子产品', parent: '电子产品', hsCode: '8517', hsDetail: '8517.62', category: '电子产品', spec: '通信设备/消费电子', origin: '中国', markets: ['美国', '德国', '日本', '印度'], tradeMode: 'crossborder', tradeIndex: 92, priceAvg: 228, keywords: ['通信', '消费电子', 'electronics'] },
+  { id: 'router-5g', name: '5G路由器', parent: '电子产品', hsCode: '8517', hsDetail: '8517.62.00', category: '电子产品', spec: '企业级 5G CPE', origin: '中国', markets: ['东盟', '德国', '美国'], tradeMode: 'crossborder', tradeIndex: 90, priceAvg: 245, keywords: ['5g', '路由器', 'CPE', '通信'] },
+  { id: 'optical', name: '光纤模块', parent: '电子产品', hsCode: '8517', hsDetail: '8517.70', category: '电子产品', spec: '25G/100G 光模块', origin: '中国', markets: ['美国', '日本', '德国'], tradeMode: 'processing', tradeIndex: 87, priceAvg: 260, keywords: ['光纤', '光模块', '光通信'] },
+  { id: 'pcb', name: '印刷电路板', parent: '电子产品', hsCode: '8534', hsDetail: '8534.00', category: '电子产品', spec: '多层 PCB HDI', origin: '中国', markets: ['东盟', '韩国', '墨西哥'], tradeMode: 'processing', tradeIndex: 84, priceAvg: 198, keywords: ['PCB', '电路板', 'HDI'] },
+  { id: 'machinery', name: '机械设备', parent: '机械设备', hsCode: '8479', hsDetail: '8479.89', category: '机械设备', spec: '工业机械/通用设备', origin: '德国', markets: ['德国', '美国', '印尼', '沙特'], tradeMode: 'general', tradeIndex: 78, priceAvg: 540, keywords: ['工业机械', '工程设备', 'machinery'] },
+  { id: 'cnc', name: '数控机床', parent: '机械设备', hsCode: '8457', hsDetail: '8457.10', category: '机械设备', spec: '五轴加工中心', origin: '德国', markets: ['中国', '美国', '日本'], tradeMode: 'general', tradeIndex: 81, priceAvg: 620, keywords: ['机床', 'CNC', '加工中心'] },
+  { id: 'pump', name: '工业泵阀', parent: '机械设备', hsCode: '8413', hsDetail: '8413.70', category: '机械设备', spec: '离心泵/控制阀', origin: '中国', markets: ['中东', '东盟', '俄罗斯'], tradeMode: 'general', tradeIndex: 74, priceAvg: 410, keywords: ['泵', '阀门', '泵阀'] },
+  { id: 'automation', name: '自动化产线模块', parent: '机械设备', hsCode: '8479', hsDetail: '8479.50', category: '机械设备', spec: '机器人/输送单元', origin: '德国', markets: ['德国', '美国', '越南'], tradeMode: 'processing', tradeIndex: 83, priceAvg: 580, keywords: ['自动化', '机器人', '产线'] },
+]
+
+export const PRODUCT_ORIGIN_OPTIONS = [
+  { value: 'all', label: '全部原产地' },
+  { value: '中国', label: '中国' },
+  { value: '德国', label: '德国' },
+]
+
+export const PRODUCT_MARKET_OPTIONS = [
+  { value: 'all', label: '全部目标市场' },
+  ...MARKET_COUNTRIES.map((c) => ({ value: c.label, label: c.label })),
+  { value: '东盟', label: '东盟' },
+  { value: '中东', label: '中东' },
+]
+
 export const PRICE_GRANULARITY = [
   { value: 'day', label: '日度' },
   { value: 'week', label: '周度' },
@@ -1214,38 +1243,75 @@ export function resolveProductByRelatedName(name) {
 
 export function semanticSearchProducts(keyword, filters = {}) {
   const q = (keyword || '').trim().toLowerCase()
-  let results = Object.keys(PRODUCT_CATALOG).map((name) => {
-    const base = PRODUCT_CATALOG[name]
-    const ext = PRODUCT_EXTENDED[name] || {}
-    let score = 50
-    if (!q) score = 80
-    else if (name.includes(keyword) || keyword.includes(name)) score = 98
-    else if (ext.keywords?.some((k) => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()))) score = 88
-    else if (base.hsCode.includes(keyword)) score = 95
-    else if (base.desc.includes(keyword)) score = 72
-    else if (q.includes('刹') || q.includes('brake')) score = name === '汽车配件' ? 85 : 40
-    else if (q.includes('5g') || q.includes('通信')) score = name === '电子产品' ? 90 : 35
-    else if (q.includes('机床') || q.includes('cnc')) score = name === '机械设备' ? 92 : 35
-    return { name, hsCode: base.hsCode, category: base.category, desc: base.desc, confidence: score, ext }
+  const keywordRaw = (keyword || '').trim()
+
+  let results = PRODUCT_DIRECTORY.map((sku) => {
+    const parentBase = PRODUCT_CATALOG[sku.parent] || {}
+    const ext = PRODUCT_EXTENDED[sku.parent] || {}
+    let score = q ? 0 : 78
+    if (q) {
+      if (sku.name.toLowerCase() === q) score = 99
+      else if (sku.name.toLowerCase().includes(q) || q.includes(sku.name.toLowerCase())) score = 96
+      else if (sku.parent.includes(keywordRaw) || keywordRaw.includes(sku.parent)) score = 94
+      else if (sku.hsCode.includes(keywordRaw) || sku.hsDetail?.includes(keywordRaw)) score = 95
+      else if (sku.keywords?.some((k) => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()))) score = 90
+      else if (sku.spec?.toLowerCase().includes(q)) score = 82
+      else if (sku.category?.includes(keywordRaw)) score = 80
+      else if (parentBase.desc?.includes(keywordRaw)) score = 72
+      else if (ext.keywords?.some((k) => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()))) score = 86
+    }
+
+    return {
+      id: sku.id,
+      name: sku.name,
+      parent: sku.parent,
+      hsCode: sku.hsCode,
+      hsDetail: sku.hsDetail,
+      category: sku.category,
+      spec: sku.spec,
+      origin: sku.origin,
+      markets: sku.markets,
+      tradeMode: sku.tradeMode,
+      tradeIndex: sku.tradeIndex,
+      priceAvg: sku.priceAvg,
+      desc: parentBase.desc || sku.spec,
+      confidence: score,
+      ext,
+    }
   }).filter((r) => r.confidence >= 40)
 
   if (filters.targetMarket && filters.targetMarket !== 'all') {
-    results = results.filter((r) => r.ext.archive?.consumers?.some((c) => c.country.includes(filters.targetMarket) || filters.targetMarket.includes(c.country)))
+    results = results
+      .filter((r) => r.markets?.some((m) => m.includes(filters.targetMarket) || filters.targetMarket.includes(m)))
       .map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 8) }))
   }
   if (filters.origin && filters.origin !== 'all') {
-    results = results.filter((r) => r.ext.archive?.producers?.some((p) => p.country?.includes(filters.origin) || filters.origin.includes(p.country)))
+    results = results
+      .filter((r) => r.origin?.includes(filters.origin) || filters.origin.includes(r.origin))
       .map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 5) }))
   }
   if (filters.tradeMode && filters.tradeMode !== 'all') {
-    const tradeModeBoost = { general: 3, processing: 2, bonded: 2, crossborder: 2 }[filters.tradeMode] || 1
-    results = results.map((r) => ({
-      ...r,
-      confidence: Math.min(99, r.confidence + tradeModeBoost),
-      tradeModeHint: filters.tradeMode,
-    }))
+    results = results
+      .filter((r) => !r.tradeMode || r.tradeMode === filters.tradeMode)
+      .map((r) => ({
+        ...r,
+        confidence: Math.min(99, r.confidence + 3),
+        tradeModeHint: filters.tradeMode,
+      }))
   }
-  return results.sort((a, b) => b.confidence - a.confidence)
+  if (filters.spec && String(filters.spec).trim()) {
+    const specQ = String(filters.spec).trim().toLowerCase()
+    results = results
+      .filter((r) => r.spec?.toLowerCase().includes(specQ))
+      .map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 4) }))
+  }
+
+  return results.sort((a, b) => b.confidence - a.confidence || a.name.localeCompare(b.name, 'zh-CN'))
+}
+
+/** 列出商品库（可选空关键词 = 全量目录） */
+export function listProductDirectory(filters = {}) {
+  return semanticSearchProducts('', filters)
 }
 
 export function getProductDetail(name) {

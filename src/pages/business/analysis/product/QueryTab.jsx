@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   App,
@@ -11,7 +11,6 @@ import {
   Input,
   InputNumber,
   Row,
-  Select,
   Space,
   Table,
   Tag,
@@ -24,11 +23,11 @@ import {
   DatabaseOutlined,
   ExportOutlined,
   LineChartOutlined,
+  OrderedListOutlined,
   SearchOutlined,
   SwapOutlined,
 } from '@ant-design/icons'
 import {
-  MARKET_COUNTRIES,
   TRADE_MODE_OPTIONS,
   calcLandedCost,
   getProductDetail,
@@ -37,6 +36,7 @@ import {
   semanticSearchProducts,
 } from '../../../../mock/analysis'
 import { exportCsv } from '../analysisExport'
+import ProductSearchModal from './ProductSearchModal'
 
 const { Text, Paragraph } = Typography
 
@@ -56,16 +56,46 @@ const RELATED_TYPES = [
   { key: 'downstream', label: '下游衍生品', color: 'success' },
 ]
 
-export default function QueryTab({ productName, onProductChange, onGoPrice, onGoSupply }) {
+const TRADE_MODE_LABEL = Object.fromEntries(TRADE_MODE_OPTIONS.map((o) => [o.value, o.label]))
+
+export default function QueryTab({
+  productName,
+  skuLabel,
+  filters: outerFilters,
+  onProductChange,
+  onFiltersChange,
+  onGoPrice,
+  onGoSupply,
+}) {
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const [query, setQuery] = useState(productName)
-  const [filters, setFilters] = useState({ tradeMode: 'all', origin: 'all', targetMarket: 'all' })
+  const [query, setQuery] = useState(skuLabel || productName)
+  const [filters, setFilters] = useState(outerFilters || {
+    tradeMode: 'all',
+    origin: 'all',
+    targetMarket: 'all',
+    spec: '',
+  })
   const [cargoValue, setCargoValue] = useState(100)
-  const [searched, setSearched] = useState(true)
   const [compareKeys, setCompareKeys] = useState([])
+  const [listOpen, setListOpen] = useState(false)
 
-  const results = useMemo(() => (searched ? semanticSearchProducts(query, filters) : []), [query, filters, searched])
+  useEffect(() => {
+    setQuery(skuLabel || productName)
+  }, [skuLabel, productName])
+
+  useEffect(() => {
+    if (outerFilters) setFilters((prev) => ({ ...prev, ...outerFilters }))
+  }, [outerFilters])
+
+  const updateFilters = (next) => {
+    setFilters(next)
+    onFiltersChange?.(next)
+  }
+
+  const product = useMemo(() => getProductDetail(productName), [productName])
+  const costResult = useMemo(() => calcLandedCost(cargoValue, product.costParams), [cargoValue, product])
+
   const compareRows = useMemo(
     () => compareKeys.map((name) => {
       const p = getProductDetail(name)
@@ -94,23 +124,36 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
       return prev.filter((k) => k !== name)
     })
   }
-  const activeName = productName
-  const product = useMemo(() => getProductDetail(activeName), [activeName])
-  const costResult = useMemo(() => calcLandedCost(cargoValue, product.costParams), [cargoValue, product])
 
-  const handleSearch = (value) => {
-    const v = (value ?? query)?.trim()
+  const openList = () => setListOpen(true)
+
+  const handleSearchClick = () => {
+    const v = query?.trim()
     if (!v) {
-      message.warning('请输入商品名称、HS编码或功能描述')
+      // 空关键词：打开全量商品库列表
+      setListOpen(true)
       return
     }
-    setQuery(v)
-    setSearched(true)
-    const top = semanticSearchProducts(v, filters)[0]
-    if (top) {
-      onProductChange(top.name)
-      message.success(`查询完成 · ${top.name} · 置信度 ${top.confidence}% · 响应 1.2s`)
+    const hits = semanticSearchProducts(v, filters)
+    if (!hits.length) {
+      message.warning('未匹配到商品，请调整关键词后从列表选择')
+      setListOpen(true)
+      return
     }
+    setListOpen(true)
+    message.success(`已匹配 ${hits.length} 条商品，请在列表中选用`)
+  }
+
+  const handleSelectFromList = (row) => {
+    const catalogName = row.parent || row.name
+    onProductChange({
+      catalogName,
+      skuLabel: row.name,
+      hs: row.hsCode,
+      filters: { ...filters },
+    })
+    setQuery(row.name)
+    message.success(`已选用「${row.name}」· HS ${row.hsDetail || row.hsCode} · 置信度 ${row.confidence}%`)
   }
 
   const codeRows = CODE_LABELS.map(({ key, label }) => ({
@@ -118,70 +161,69 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
     code: product.codes?.[key] || product.hsCode || '-',
   }))
 
+  const activeFilters = [
+    filters.tradeMode !== 'all' && TRADE_MODE_LABEL[filters.tradeMode],
+    filters.origin !== 'all' && `原产地:${filters.origin}`,
+    filters.targetMarket !== 'all' && `市场:${filters.targetMarket}`,
+    filters.spec && `规格:${filters.spec}`,
+  ].filter(Boolean)
+
   return (
     <>
-      <div className="business-filter-bar">
-        <Space.Compact style={{ width: 420, maxWidth: '100%' }}>
-          <Input
-            value={query}
-            placeholder="商品名称 / HS编码 / 自然语言描述，如：刹车片、5G路由器"
-            onChange={(e) => setQuery(e.target.value)}
-            onPressEnter={() => handleSearch()}
-          />
-          <Button type="primary" icon={<SearchOutlined />} onClick={() => handleSearch()}>查询</Button>
-        </Space.Compact>
-        <Space wrap>
-          <Select value={filters.tradeMode} style={{ width: 130 }} options={TRADE_MODE_OPTIONS} onChange={(v) => setFilters((p) => ({ ...p, tradeMode: v }))} />
-          <Select value={filters.origin} style={{ width: 120 }} options={[{ value: 'all', label: '全部原产地' }, { value: '中国', label: '中国' }, { value: '德国', label: '德国' }]} onChange={(v) => setFilters((p) => ({ ...p, origin: v }))} />
-          <Select value={filters.targetMarket} style={{ width: 120 }} options={[{ value: 'all', label: '全部市场' }, ...MARKET_COUNTRIES.map((c) => ({ value: c.label, label: c.label }))]} onChange={(v) => setFilters((p) => ({ ...p, targetMarket: v }))} />
-          <Button
-            icon={<CloudDownloadOutlined />}
-            onClick={() => {
-              exportCsv(`product-archive-${product.name}.csv`, ['field', 'value'], [
-                { field: '名称', value: product.name },
-                { field: 'HS', value: product.codes?.hs || product.hsCode },
-                { field: '物理属性', value: product.archive?.physical },
-                { field: '贸易活跃度', value: product.archive?.tradeIndex },
-              ])
-              message.success('商品档案 CSV 已下载')
-            }}
-          >
-            导出
-          </Button>
-        </Space>
-      </div>
-
-      {searched && results.length > 1 && (
-        <div className="business-panel">
-          <h3 className="business-panel-title">语义检索结果 · 匹配置信度</h3>
+      <div className="business-panel product-query-hero">
+        <div className="product-query-steps">
+          <Tag color="processing">1. 输入/筛选</Tag>
+          <Tag color="processing">2. 列表选用</Tag>
+          <Tag color="processing">3. 查看档案与下钻分析</Tag>
+        </div>
+        <div className="business-filter-bar" style={{ marginBottom: 0, border: 'none', padding: 0, background: 'transparent' }}>
+          <Space.Compact style={{ width: 460, maxWidth: '100%' }}>
+            <Input
+              value={query}
+              placeholder="商品名称 / HS编码 / 功能描述，如：刹车片、5G路由器"
+              onChange={(e) => setQuery(e.target.value)}
+              onPressEnter={handleSearchClick}
+            />
+            <Button type="primary" icon={<SearchOutlined />} onClick={handleSearchClick}>查询</Button>
+          </Space.Compact>
           <Space wrap>
-            {results.map((r) => (
-              <Card
-                key={r.name}
-                size="small"
-                hoverable
-                className={activeName === r.name ? 'forecast-scenario-active' : ''}
-                onClick={() => { onProductChange(r.name); setQuery(r.name) }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <div>
-                    <Text strong>{r.name}</Text>
-                    <div><Tag>HS {r.hsCode}</Tag><Tag color="blue">{r.confidence}%</Tag></div>
-                  </div>
-                  <Checkbox
-                    checked={compareKeys.includes(r.name)}
-                    disabled={!compareKeys.includes(r.name) && compareKeys.length >= 3}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => toggleCompare(r.name, e.target.checked)}
-                  >
-                    对比
-                  </Checkbox>
-                </div>
-              </Card>
-            ))}
+            <Button icon={<OrderedListOutlined />} onClick={openList}>商品库列表</Button>
+            <Button
+              icon={<CloudDownloadOutlined />}
+              onClick={() => {
+                exportCsv(`product-archive-${product.name}.csv`, ['field', 'value'], [
+                  { field: '名称', value: skuLabel || product.name },
+                  { field: '档案商品', value: product.name },
+                  { field: 'HS', value: product.codes?.hs || product.hsCode },
+                  { field: '物理属性', value: product.archive?.physical },
+                  { field: '贸易活跃度', value: product.archive?.tradeIndex },
+                ])
+                message.success('商品档案 CSV 已下载')
+              }}
+            >
+              导出
+            </Button>
           </Space>
         </div>
-      )}
+        <Paragraph type="secondary" style={{ margin: '12px 0 0' }}>
+          查询结果以<strong>列表弹窗</strong>呈现，支持名称、HS、规格、贸易方式、原产地、目标市场组合筛选；点击「选用」加载 360° 数字档案。
+          {activeFilters.length > 0 && (
+            <span> 当前筛选：{activeFilters.map((f) => <Tag key={f} style={{ marginLeft: 4 }}>{f}</Tag>)}</span>
+          )}
+        </Paragraph>
+      </div>
+
+      <ProductSearchModal
+        open={listOpen}
+        onClose={() => setListOpen(false)}
+        initialKeyword={query}
+        initialFilters={filters}
+        activeName={productName}
+        onSelect={(row, nextFilters) => {
+          if (nextFilters) updateFilters(nextFilters)
+          handleSelectFromList(row)
+        }}
+      />
 
       {compareKeys.length >= 2 && (
         <div className="business-panel">
@@ -208,9 +250,23 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
       <Row gutter={16}>
         <Col xs={24} lg={16}>
           <div className="business-panel">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h3 className="business-panel-title" style={{ margin: 0 }}><DatabaseOutlined /> 360° 商品数字档案</h3>
-              <Tag color="success">每日更新 · {product.archive?.updateDate}</Tag>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
+              <h3 className="business-panel-title" style={{ margin: 0 }}>
+                <DatabaseOutlined /> 360° 商品数字档案
+                {skuLabel && skuLabel !== productName && (
+                  <Tag color="blue" style={{ marginLeft: 8 }}>{skuLabel}</Tag>
+                )}
+              </h3>
+              <Space>
+                <Checkbox
+                  checked={compareKeys.includes(productName)}
+                  disabled={!compareKeys.includes(productName) && compareKeys.length >= 3}
+                  onChange={(e) => toggleCompare(productName, e.target.checked)}
+                >
+                  加入对比
+                </Checkbox>
+                <Tag color="success">每日更新 · {product.archive?.updateDate}</Tag>
+              </Space>
             </div>
             <Row gutter={16}>
               <Col xs={24} md={8}>
@@ -225,6 +281,8 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
               </Col>
               <Col xs={24} md={16}>
                 <Descriptions bordered column={2} size="small">
+                  <Descriptions.Item label="商品">{skuLabel || product.name}</Descriptions.Item>
+                  <Descriptions.Item label="档案归类">{product.name}</Descriptions.Item>
                   <Descriptions.Item label="HS编码">{product.codes?.hs || product.hsCode}</Descriptions.Item>
                   <Descriptions.Item label="10位编码">{product.codes?.hs10 || '-'}</Descriptions.Item>
                   <Descriptions.Item label="物理属性" span={2}>{product.archive?.physical}</Descriptions.Item>
@@ -377,11 +435,13 @@ export default function QueryTab({ productName, onProductChange, onGoPrice, onGo
                       style={{ marginBottom: 8, padding: '6px 0', borderBottom: '1px solid #f0f0f0', cursor: mapped ? 'pointer' : 'default' }}
                       onClick={() => {
                         if (!mapped) {
-                          message.info(`${item.name} 暂未建立独立商品档案，已保留推荐信息`)
+                          message.info(`${item.name} 暂未建立独立商品档案，可在商品库列表中继续检索`)
+                          setQuery(item.name.replace(/\s*HS\d+$/i, '').trim())
+                          setListOpen(true)
                           return
                         }
-                        onProductChange(mapped)
-                        setQuery(mapped)
+                        onProductChange({ catalogName: mapped, skuLabel: item.name, hs: undefined })
+                        setQuery(item.name)
                         message.success(`已切换至关联商品：${mapped}`)
                       }}
                     >
