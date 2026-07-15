@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   App,
-  Badge,
   Button,
   Card,
   Checkbox,
@@ -61,6 +60,7 @@ import {
 } from './evaluationIndicatorStore'
 import {
   loadOpportunities,
+  persistEvaluatedScores,
   saveOpportunities,
   toggleFavoriteForUser,
 } from '../opportunityStore'
@@ -75,7 +75,6 @@ import {
   getRankIcon,
   sortOpportunities,
   formatGeoLocation,
-  formatGeoLocation as formatOpportunitySource,
 } from '../utils'
 import '../opportunity.css'
 
@@ -211,8 +210,9 @@ export default function OpportunityEvaluationPage() {
       return
     }
     setManualOrder([])
-    setRankAlert({ type: 'info', text: '评估已完成，排序结果已基于最新指标配置更新' })
-    message.success('量化评估已完成')
+    setPool((prev) => persistEvaluatedScores(prev, evaluatedList))
+    setRankAlert({ type: 'info', text: '评估已完成，排序结果已基于最新指标配置更新，分数已同步至商机池' })
+    message.success('量化评估已完成，分数已写回商机数据')
     setActiveTab('results')
   }
 

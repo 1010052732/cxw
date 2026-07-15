@@ -1,9 +1,11 @@
 import { INITIAL_OPPORTUNITIES } from '../../../mock/opportunity'
 import { applyGeoLocation, formatGeoLocation } from '../../../mock/geo'
 import { getUserById } from '../../../mock/rbac'
+import { evaluateOpportunities } from './utils'
+import { loadEvalWeights, loadSubWeights } from './evaluation/evaluationIndicatorStore'
 
 export const OPPORTUNITY_DATA_KEY = 'opportunity-workflow-data'
-export const OPPORTUNITY_DATA_VERSION = 2
+export const OPPORTUNITY_DATA_VERSION = 3
 const OPPORTUNITY_DATA_VERSION_KEY = 'opportunity-workflow-data-version'
 
 const WORKFLOW_PERSIST_FIELDS = [
@@ -20,6 +22,13 @@ const WORKFLOW_PERSIST_FIELDS = [
   'assignedUserName',
   'ownerName',
   'updatedAt',
+  'score',
+  'marketScore',
+  'policyScore',
+  'creditScore',
+  'compositeScore',
+  'indicatorScores',
+  'evaluatedAt',
 ]
 
 function mergeStoredWorkflow(seed, stored) {
@@ -43,6 +52,12 @@ const WORKFLOW_SEED = {
   'OP-2026-012': { ownerId: 'U003', assignedUserId: 'U004', favoriteUserIds: ['U002', 'U003'] },
   'OP-2026-003': { ownerId: 'U004', assignedUserId: 'U004', favoriteUserIds: ['U004'] },
   'OP-2026-008': { ownerId: 'U002', assignedUserId: 'U003', favoriteUserIds: [] },
+}
+
+export function applyEvaluationToOpportunities(list, weights = null, subWeights = null) {
+  const w = weights || loadEvalWeights()
+  const sw = subWeights || loadSubWeights()
+  return evaluateOpportunities(list, w, null, null, { subWeights: sw })
 }
 
 export function enrichOpportunityRecord(item, users) {
@@ -74,30 +89,50 @@ export function enrichOpportunities(list, users) {
 
 export function loadOpportunities(users) {
   const version = Number(localStorage.getItem(OPPORTUNITY_DATA_VERSION_KEY) || 0)
-  const fresh = enrichOpportunities(INITIAL_OPPORTUNITIES.map((item) => ({ ...item })), users)
+  let base = INITIAL_OPPORTUNITIES.map((item) => ({ ...item }))
 
   try {
     const raw = localStorage.getItem(OPPORTUNITY_DATA_KEY)
     if (raw && version >= OPPORTUNITY_DATA_VERSION) {
       const parsed = JSON.parse(raw)
-      const merged = mergeOpportunityRecords(parsed)
-      return enrichOpportunities(merged, users)
-    }
-
-    if (raw && version < OPPORTUNITY_DATA_VERSION) {
+      base = mergeOpportunityRecords(parsed)
+    } else if (raw && version < OPPORTUNITY_DATA_VERSION) {
       const parsed = JSON.parse(raw)
-      const merged = mergeOpportunityRecords(parsed)
-      const enriched = enrichOpportunities(merged, users)
-      saveOpportunities(enriched)
-      localStorage.setItem(OPPORTUNITY_DATA_VERSION_KEY, String(OPPORTUNITY_DATA_VERSION))
-      return enriched
+      base = mergeOpportunityRecords(parsed)
     }
   } catch {
     /* ignore */
   }
 
-  localStorage.setItem(OPPORTUNITY_DATA_VERSION_KEY, String(OPPORTUNITY_DATA_VERSION))
-  return fresh
+  const evaluated = applyEvaluationToOpportunities(base)
+  const enriched = enrichOpportunities(evaluated, users)
+
+  if (version < OPPORTUNITY_DATA_VERSION) {
+    saveOpportunities(enriched)
+    localStorage.setItem(OPPORTUNITY_DATA_VERSION_KEY, String(OPPORTUNITY_DATA_VERSION))
+  }
+
+  return enriched
+}
+
+export function persistEvaluatedScores(list, evaluatedList) {
+  const map = new Map(evaluatedList.map((item) => [item.id, item]))
+  const merged = list.map((item) => {
+    const ev = map.get(item.id)
+    if (!ev) return item
+    return {
+      ...item,
+      score: ev.score,
+      marketScore: ev.marketScore,
+      policyScore: ev.policyScore,
+      creditScore: ev.creditScore,
+      compositeScore: ev.compositeScore,
+      indicatorScores: ev.indicatorScores,
+      evaluatedAt: ev.evaluatedAt || new Date().toISOString(),
+    }
+  })
+  saveOpportunities(merged)
+  return merged
 }
 
 export function saveOpportunities(data) {

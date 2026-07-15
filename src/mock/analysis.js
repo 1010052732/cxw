@@ -1083,18 +1083,23 @@ export const TRADE_MODE_OPTIONS = [
 
 /** 商品库目录（列表弹窗检索用），name 为展示名，parent 映射到 PRODUCT_CATALOG */
 export const PRODUCT_DIRECTORY = [
-  { id: 'auto-parts', name: '汽车配件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.99', category: '汽车配件', spec: '发动机/底盘/车身附件', origin: '中国', markets: ['德国', '美国', '日本', '巴西'], tradeMode: 'general', tradeIndex: 86, priceAvg: 142, keywords: ['汽配', '零部件', 'auto parts'] },
-  { id: 'brake-pad', name: '刹车片', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.30', category: '汽车配件', spec: '陶瓷/半金属制动片', origin: '中国', markets: ['德国', '美国', '墨西哥'], tradeMode: 'general', tradeIndex: 88, priceAvg: 136, keywords: ['brake pad', '制动片', '刹车'] },
-  { id: 'chassis', name: '底盘系统件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.80', category: '汽车配件', spec: '悬架/转向模块', origin: '德国', markets: ['德国', '美国', '日本'], tradeMode: 'processing', tradeIndex: 82, priceAvg: 158, keywords: ['底盘', '悬架', '转向'] },
-  { id: 'engine-parts', name: '发动机零部件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.91', category: '汽车配件', spec: '活塞/涡轮相关件', origin: '中国', markets: ['东盟', '巴西', '印度'], tradeMode: 'general', tradeIndex: 79, priceAvg: 145, keywords: ['发动机', '活塞', '涡轮'] },
-  { id: 'electronics', name: '电子产品', parent: '电子产品', hsCode: '8517', hsDetail: '8517.62', category: '电子产品', spec: '通信设备/消费电子', origin: '中国', markets: ['美国', '德国', '日本', '印度'], tradeMode: 'crossborder', tradeIndex: 92, priceAvg: 228, keywords: ['通信', '消费电子', 'electronics'] },
-  { id: 'router-5g', name: '5G路由器', parent: '电子产品', hsCode: '8517', hsDetail: '8517.62.00', category: '电子产品', spec: '企业级 5G CPE', origin: '中国', markets: ['东盟', '德国', '美国'], tradeMode: 'crossborder', tradeIndex: 90, priceAvg: 245, keywords: ['5g', '路由器', 'CPE', '通信'] },
-  { id: 'optical', name: '光纤模块', parent: '电子产品', hsCode: '8517', hsDetail: '8517.70', category: '电子产品', spec: '25G/100G 光模块', origin: '中国', markets: ['美国', '日本', '德国'], tradeMode: 'processing', tradeIndex: 87, priceAvg: 260, keywords: ['光纤', '光模块', '光通信'] },
-  { id: 'pcb', name: '印刷电路板', parent: '电子产品', hsCode: '8534', hsDetail: '8534.00', category: '电子产品', spec: '多层 PCB HDI', origin: '中国', markets: ['东盟', '韩国', '墨西哥'], tradeMode: 'processing', tradeIndex: 84, priceAvg: 198, keywords: ['PCB', '电路板', 'HDI'] },
-  { id: 'machinery', name: '机械设备', parent: '机械设备', hsCode: '8479', hsDetail: '8479.89', category: '机械设备', spec: '工业机械/通用设备', origin: '德国', markets: ['德国', '美国', '印尼', '沙特'], tradeMode: 'general', tradeIndex: 78, priceAvg: 540, keywords: ['工业机械', '工程设备', 'machinery'] },
-  { id: 'cnc', name: '数控机床', parent: '机械设备', hsCode: '8457', hsDetail: '8457.10', category: '机械设备', spec: '五轴加工中心', origin: '德国', markets: ['中国', '美国', '日本'], tradeMode: 'general', tradeIndex: 81, priceAvg: 620, keywords: ['机床', 'CNC', '加工中心'] },
-  { id: 'pump', name: '工业泵阀', parent: '机械设备', hsCode: '8413', hsDetail: '8413.70', category: '机械设备', spec: '离心泵/控制阀', origin: '中国', markets: ['中东', '东盟', '俄罗斯'], tradeMode: 'general', tradeIndex: 74, priceAvg: 410, keywords: ['泵', '阀门', '泵阀'] },
-  { id: 'automation', name: '自动化产线模块', parent: '机械设备', hsCode: '8479', hsDetail: '8479.50', category: '机械设备', spec: '机器人/输送单元', origin: '德国', markets: ['德国', '美国', '越南'], tradeMode: 'processing', tradeIndex: 83, priceAvg: 580, keywords: ['自动化', '机器人', '产线'] },
+  { id: 'auto-parts', name: '汽车配件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.99', category: '汽车配件', spec: '发动机/底盘/车身附件', origin: '中国', markets: ['德国', '美国', '日本', '巴西'], tradeMode: 'general', tradeIndex: 86, priceAvg: 142, keywords: ['汽配', '零部件', 'auto parts'], updateDate: '2026-07-02' },
+  { id: 'brake-pad', name: '刹车片', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.30', category: '汽车配件', spec: '陶瓷/半金属制动片', origin: '中国', markets: ['德国', '美国', '墨西哥'], tradeMode: 'general', tradeIndex: 88, priceAvg: 136, keywords: ['brake pad', '制动片', '刹车'], updateDate: '2026-07-02' },
+  { id: 'chassis', name: '底盘系统件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.80', category: '汽车配件', spec: '悬架/转向模块', origin: '德国', markets: ['德国', '美国', '日本'], tradeMode: 'processing', tradeIndex: 82, priceAvg: 158, keywords: ['底盘', '悬架', '转向'], updateDate: '2026-06-28' },
+  { id: 'engine-parts', name: '发动机零部件', parent: '汽车配件', hsCode: '8708', hsDetail: '8708.91', category: '汽车配件', spec: '活塞/涡轮相关件', origin: '中国', markets: ['东盟', '巴西', '印度'], tradeMode: 'general', tradeIndex: 79, priceAvg: 145, keywords: ['发动机', '活塞', '涡轮'], updateDate: '2026-06-25' },
+  { id: 'electronics', name: '电子产品', parent: '电子产品', hsCode: '8517', hsDetail: '8517.62', category: '电子产品', spec: '通信设备/消费电子', origin: '中国', markets: ['美国', '德国', '日本', '印度'], tradeMode: 'crossborder', tradeIndex: 92, priceAvg: 228, keywords: ['通信', '消费电子', 'electronics'], updateDate: '2026-07-02' },
+  { id: 'router-5g', name: '5G路由器', parent: '电子产品', hsCode: '8517', hsDetail: '8517.62.00', category: '电子产品', spec: '企业级 5G CPE', origin: '中国', markets: ['东盟', '德国', '美国'], tradeMode: 'crossborder', tradeIndex: 90, priceAvg: 245, keywords: ['5g', '路由器', 'CPE', '通信'], updateDate: '2026-07-01' },
+  { id: 'optical', name: '光纤模块', parent: '电子产品', hsCode: '8517', hsDetail: '8517.70', category: '电子产品', spec: '25G/100G 光模块', origin: '中国', markets: ['美国', '日本', '德国'], tradeMode: 'processing', tradeIndex: 87, priceAvg: 260, keywords: ['光纤', '光模块', '光通信'], updateDate: '2026-06-30' },
+  { id: 'pcb', name: '印刷电路板', parent: '电子产品', hsCode: '8534', hsDetail: '8534.00', category: '电子产品', spec: '多层 PCB HDI', origin: '中国', markets: ['东盟', '韩国', '墨西哥'], tradeMode: 'processing', tradeIndex: 84, priceAvg: 198, keywords: ['PCB', '电路板', 'HDI'], updateDate: '2026-06-22' },
+  { id: 'machinery', name: '机械设备', parent: '机械设备', hsCode: '8479', hsDetail: '8479.89', category: '机械设备', spec: '工业机械/通用设备', origin: '德国', markets: ['德国', '美国', '印尼', '沙特'], tradeMode: 'general', tradeIndex: 78, priceAvg: 540, keywords: ['工业机械', '工程设备', 'machinery'], updateDate: '2026-06-18' },
+  { id: 'cnc', name: '数控机床', parent: '机械设备', hsCode: '8457', hsDetail: '8457.10', category: '机械设备', spec: '五轴加工中心', origin: '德国', markets: ['中国', '美国', '日本'], tradeMode: 'general', tradeIndex: 81, priceAvg: 620, keywords: ['机床', 'CNC', '加工中心'], updateDate: '2026-06-15' },
+  { id: 'pump', name: '工业泵阀', parent: '机械设备', hsCode: '8413', hsDetail: '8413.70', category: '机械设备', spec: '离心泵/控制阀', origin: '中国', markets: ['中东', '东盟', '俄罗斯'], tradeMode: 'general', tradeIndex: 74, priceAvg: 410, keywords: ['泵', '阀门', '泵阀'], updateDate: '2026-06-10' },
+  { id: 'automation', name: '自动化产线模块', parent: '机械设备', hsCode: '8479', hsDetail: '8479.50', category: '机械设备', spec: '机器人/输送单元', origin: '德国', markets: ['德国', '美国', '越南'], tradeMode: 'processing', tradeIndex: 83, priceAvg: 580, keywords: ['自动化', '机器人', '产线'], updateDate: '2026-06-28' },
+  { id: 'lithium-battery', name: '三元锂电池', parent: '电子产品', hsCode: '8507', hsDetail: '8507.60.00', category: '新能源', spec: 'NCM811 | 容量100Ah | 电压3.7V', origin: '中国', markets: ['全球', '北美', '欧洲'], tradeMode: 'general', tradeIndex: 94, priceAvg: 312, keywords: ['锂电池', '三元', '动力电池', 'NCM'], updateDate: '2026-07-02' },
+  { id: 'silicone', name: '有机硅中间体', parent: '机械设备', hsCode: '2931', hsDetail: '2931.00.90', category: '化工', spec: 'DMC/硅氧烷中间体 | 纯度≥99.5%', origin: '中国', markets: ['东盟', '印度', '中东'], tradeMode: 'general', tradeIndex: 76, priceAvg: 185, keywords: ['有机硅', 'DMC', '化工中间体'], updateDate: '2026-06-20' },
+  { id: 'medical-mask', name: '医用防护口罩', parent: '电子产品', hsCode: '6307', hsDetail: '6307.90.40', category: '医疗物资', spec: 'KN95/N95 | 三层熔喷', origin: '中国', markets: ['美国', '欧盟', '日本'], tradeMode: 'crossborder', tradeIndex: 68, priceAvg: 42, keywords: ['口罩', '防护', 'KN95'], updateDate: '2026-05-15' },
+  { id: 'solar-panel', name: '光伏组件', parent: '电子产品', hsCode: '8541', hsDetail: '8541.40.20', category: '新能源', spec: '单晶PERC | 功率550W+', origin: '中国', markets: ['欧洲', '中东', '拉美'], tradeMode: 'general', tradeIndex: 91, priceAvg: 268, keywords: ['光伏', '太阳能', '组件'], updateDate: '2026-07-01' },
+  { id: 'steel-coil', name: '热轧钢卷', parent: '机械设备', hsCode: '7208', hsDetail: '7208.51.00', category: '钢铁', spec: 'Q235B | 厚度2-12mm', origin: '中国', markets: ['东盟', '中东', '非洲'], tradeMode: 'general', tradeIndex: 85, priceAvg: 420, keywords: ['钢卷', '热轧', '钢材'], updateDate: '2026-06-25' },
 ]
 
 export const PRODUCT_ORIGIN_OPTIONS = [
@@ -1135,33 +1140,143 @@ const DEFAULT_DATA_SOURCES = [
   { type: '海关', sources: ['各国进口单价统计'], freq: '月度', desc: '区域市场均价参考' },
 ]
 
-function expandChainSeries(chain, granularity, timeRange) {
-  const spot = chain?.spot || []
-  if (!spot.length) return []
-  const basePrice = spot[spot.length - 1]?.price || 140
-  const pointCounts = { '1m': 30, '3m': 12, '6m': 6, '1y': 12, '5y': 5 }[timeRange] || 6
-  const granMult = { day: 1, week: 0.25, month: 1, quarter: 0.33, year: 0.083 }[granularity] || 1
-  const count = Math.max(4, Math.round(pointCounts * (granMult > 1 ? granMult : 1 / granMult)))
+const MARKET_PRICE_PREMIUM = {
+  德国: 1.04, 美国: 1.08, 日本: 1.02, 东盟: 0.96, 中东: 0.98, 巴西: 0.94, 印度: 0.92, 墨西哥: 0.97,
+}
+const ORIGIN_PRICE_ADJUST = { 中国: 1.0, 德国: 1.06 }
 
-  const labels = []
-  for (let i = count - 1; i >= 0; i -= 1) {
-    if (granularity === 'day') labels.push(`${String(6).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`)
-    else if (granularity === 'week') labels.push(`W${count - i}`)
-    else if (granularity === 'quarter') labels.push(`202${5 - Math.floor(i / 4)}Q${(i % 4) + 1}`)
-    else if (granularity === 'year') labels.push(String(2026 - i))
-    else labels.push(`2026-${String(Math.max(1, 7 - i)).padStart(2, '0')}`)
+function applyPriceFilters(pa, filters = {}) {
+  const { targetMarket = 'all', origin = 'all' } = filters
+  const marketMult = targetMarket === 'all' ? 1 : (MARKET_PRICE_PREMIUM[targetMarket] || 1)
+  const originMult = origin === 'all' ? 1 : (ORIGIN_PRICE_ADJUST[origin] || 1)
+  const mult = marketMult * originMult
+  if (mult === 1) return pa
+  const indices = (pa.indices || []).map((idx, i) => ({
+    ...idx,
+    value: Math.round(idx.value * mult),
+    change: Math.round((idx.change + (i === 0 ? (marketMult - 1) * 20 : 0)) * 10) / 10,
+  }))
+  const scaleChain = (series) => (series || []).map((d) => ({ ...d, price: Math.round(d.price * mult) }))
+  return {
+    ...pa,
+    indices,
+    chain: {
+      futures: scaleChain(pa.chain?.futures),
+      spot: scaleChain(pa.chain?.spot),
+      terminal: scaleChain(pa.chain?.terminal),
+    },
+    filterNote: [
+      targetMarket !== 'all' ? `目标市场：${targetMarket}` : null,
+      origin !== 'all' ? `原产地：${origin}` : null,
+    ].filter(Boolean).join(' · ') || null,
   }
+}
 
+function interpolateSeries(anchors, count) {
+  if (!anchors?.length) return []
+  if (anchors.length === 1) return Array.from({ length: count }, (_, i) => ({ idx: i, price: anchors[0].price }))
+  const result = []
+  const segments = anchors.length - 1
+  const perSeg = Math.max(1, Math.floor(count / segments))
+  for (let s = 0; s < segments; s += 1) {
+    const a = anchors[s]
+    const b = anchors[s + 1]
+    const steps = s === segments - 1 ? count - result.length : perSeg
+    for (let i = 0; i < steps; i += 1) {
+      const t = steps <= 1 ? 1 : i / (steps - 1)
+      const wave = Math.sin((result.length + i) * 0.65) * 1.2
+      result.push({
+        idx: result.length,
+        price: Math.round(a.price + (b.price - a.price) * t + wave),
+        anchor: s === 0 && i === 0 ? a.date : null,
+      })
+    }
+  }
+  return result.slice(0, count)
+}
+
+function buildDateLabels(granularity, timeRange, count) {
+  const labels = []
+  const now = new Date('2026-06-15')
+  for (let i = count - 1; i >= 0; i -= 1) {
+    const d = new Date(now)
+    if (granularity === 'day') d.setDate(d.getDate() - i)
+    else if (granularity === 'week') d.setDate(d.getDate() - i * 7)
+    else if (granularity === 'month') d.setMonth(d.getMonth() - i)
+    else if (granularity === 'quarter') d.setMonth(d.getMonth() - i * 3)
+    else d.setFullYear(d.getFullYear() - i)
+
+    if (granularity === 'day') labels.push(`${d.getMonth() + 1}/${d.getDate()}`)
+    else if (granularity === 'week') labels.push(`W${Math.ceil((d.getDate() + 1) / 7) + d.getMonth() * 4}`)
+    else if (granularity === 'quarter') labels.push(`${d.getFullYear()}Q${Math.floor(d.getMonth() / 3) + 1}`)
+    else if (granularity === 'year') labels.push(String(d.getFullYear()))
+    else labels.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+  return labels
+}
+
+function expandChainSeries(chain, granularity, timeRange) {
+  const spotAnchors = chain?.spot || []
+  if (!spotAnchors.length) return []
+
+  const pointCounts = { '1m': 30, '3m': 12, '6m': 6, '1y': 12, '5y': 5 }[timeRange] || 6
+  const granMult = { day: 4, week: 2, month: 1, quarter: 0.5, year: 0.2 }[granularity] || 1
+  const count = Math.max(4, Math.round(pointCounts * granMult))
+  const labels = buildDateLabels(granularity, timeRange, count)
+
+  const seriesConfig = [
+    { key: 'futures', name: '期货', spread: -4 },
+    { key: 'spot', name: '现货', spread: 0 },
+    { key: 'terminal', name: '终端零售', spread: 14 },
+  ]
+
+  return seriesConfig.flatMap(({ key, name, spread }) => {
+    const anchors = chain[key] || spotAnchors
+    const interpolated = interpolateSeries(anchors, count)
+    return labels.map((date, idx) => ({
+      date,
+      price: Math.round((interpolated[idx]?.price || anchors[anchors.length - 1].price) + spread),
+      series: name,
+    }))
+  })
+}
+
+function buildHistory5y(detail, baseValue) {
+  const hist = detail.archive?.priceHistory10y
+  if (hist?.length >= 5) {
+    return hist.slice(-6).map((d) => ({ year: String(d.year), price: d.price }))
+  }
   return [
-    { key: 'futures', name: '期货', offset: -3 },
-    { key: 'spot', name: '现货', offset: 0 },
-    { key: 'terminal', name: '终端零售', offset: 12 },
-  ].flatMap(({ name, offset }) =>
-    labels.map((date, idx) => {
-      const wave = Math.sin(idx * 0.8) * 3 + (idx - count / 2) * 0.4
-      return { date, price: Math.round(basePrice + offset + wave), series: name }
-    }),
-  )
+    { year: '2021', price: Math.round(baseValue * 0.82) },
+    { year: '2022', price: Math.round(baseValue * 0.88) },
+    { year: '2023', price: Math.round(baseValue * 0.94) },
+    { year: '2024', price: Math.round(baseValue * 0.98) },
+    { year: '2025', price: Math.round(baseValue * 1.02) },
+    { year: '2026', price: baseValue },
+  ]
+}
+
+function resolvePriceAnalysisParent(name) {
+  if (PRODUCT_EXTENDED[name]?.priceAnalysis) return name
+  const dir = PRODUCT_DIRECTORY.find((d) => d.name === name || d.parent === name)
+  if (dir?.parent && PRODUCT_EXTENDED[dir.parent]?.priceAnalysis) return dir.parent
+  if (/刹|汽配|配件|底盘|发动/i.test(name)) return '汽车配件'
+  if (/5g|电子|光纤|电路|pcb|路由/i.test(name)) return '电子产品'
+  if (/机床|机械|泵|自动|cnc/i.test(name)) return '机械设备'
+  return '汽车配件'
+}
+
+function buildSupplyDisruption(pa, productName) {
+  const drivers = pa.drivers || []
+  const policy = drivers.find((d) => d.layer === '政策')
+  const cost = drivers.find((d) => d.layer === '成本' && String(d.change).includes('+'))
+  if (productName === '汽车配件' && policy) {
+    return { active: true, title: '欧盟反倾销调查推进', impact: '部分制动器品类出口成本上升，市场惜售情绪升温' }
+  }
+  if (cost && parseFloat(String(cost.change)) >= 5) {
+    return { active: true, title: `${cost.factor}显著上涨`, impact: '成本传导压力加大，短期价格支撑偏强' }
+  }
+  return { active: false, title: null, impact: null }
 }
 
 function buildSeasonalHeatmap(baseValue = 140) {
@@ -1276,9 +1391,17 @@ export function semanticSearchProducts(keyword, filters = {}) {
       priceAvg: sku.priceAvg,
       desc: parentBase.desc || sku.spec,
       confidence: score,
+      updateDate: sku.updateDate || parentBase.archive?.updateDate || ext.archive?.updateDate || '2026-07-02',
       ext,
     }
   }).filter((r) => r.confidence >= 40)
+
+  if (filters.hs && String(filters.hs).trim()) {
+    const hsQ = String(filters.hs).trim().toLowerCase()
+    results = results
+      .filter((r) => r.hsCode?.toLowerCase().includes(hsQ) || r.hsDetail?.toLowerCase().includes(hsQ))
+      .map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 6) }))
+  }
 
   if (filters.targetMarket && filters.targetMarket !== 'all') {
     results = results
@@ -1320,9 +1443,26 @@ export function getProductDetail(name) {
   return { ...base, ...ext, name: name || '汽车配件' }
 }
 
-export function getPriceAnalysisData(name, granularity = 'month', timeRange = '6m') {
-  const detail = getProductDetail(name)
-  const pa = detail.priceAnalysis || PRODUCT_EXTENDED['汽车配件'].priceAnalysis
+export function getPriceAnalysisData(name, granularity = 'month', timeRange = '6m', filters = {}) {
+  const parent = resolvePriceAnalysisParent(name)
+  const detail = getProductDetail(parent)
+  let pa = { ...(detail.priceAnalysis || PRODUCT_EXTENDED['汽车配件'].priceAnalysis) }
+
+  const dirSku = PRODUCT_DIRECTORY.find((d) => d.name === name)
+  if (dirSku?.priceAvg && dirSku.parent === parent) {
+    const ratio = dirSku.priceAvg / (pa.indices?.[0]?.value || dirSku.priceAvg)
+    if (Math.abs(ratio - 1) > 0.02) {
+      pa = {
+        ...pa,
+        indices: (pa.indices || []).map((idx) => ({ ...idx, value: Math.round(idx.value * ratio) })),
+        chain: Object.fromEntries(
+          Object.entries(pa.chain || {}).map(([k, series]) => [k, series.map((d) => ({ ...d, price: Math.round(d.price * ratio) }))]),
+        ),
+      }
+    }
+  }
+
+  pa = applyPriceFilters(pa, filters)
   const chain = pa.chain || {}
   const multiLine = expandChainSeries(chain, granularity, timeRange)
   const forecastLines = [
@@ -1330,23 +1470,35 @@ export function getPriceAnalysisData(name, granularity = 'month', timeRange = '6
     ...(pa.forecast?.scenarios?.optimistic || []).map((d) => ({ ...d, series: '乐观情景' })),
     ...(pa.forecast?.scenarios?.pessimistic || []).map((d) => ({ ...d, series: '风险情景' })),
   ]
-  const history5y = [
-    { year: '2021', price: Math.round((pa.indices[0]?.value || 140) * 0.82) },
-    { year: '2022', price: Math.round((pa.indices[0]?.value || 140) * 0.88) },
-    { year: '2023', price: Math.round((pa.indices[0]?.value || 140) * 0.94) },
-    { year: '2024', price: Math.round((pa.indices[0]?.value || 140) * 0.98) },
-    { year: '2025', price: Math.round((pa.indices[0]?.value || 140) * 1.02) },
-    { year: '2026', price: pa.indices[0]?.value || 140 },
-  ]
   const currentPrice = pa.indices?.[0]?.value || 140
+  const history5y = buildHistory5y(detail, currentPrice)
   const dailyChange = pa.indices?.[0]?.change || 0
+
+  const weeklyChange = (() => {
+    const spot = multiLine.filter((d) => d.series === '现货')
+    if (spot.length < 2) return dailyChange
+    const last = spot[spot.length - 1].price
+    const prev = spot[spot.length - 2].price
+    return Math.round(((last - prev) / prev) * 1000) / 10
+  })()
+
+  const alertBase = pa.forecast?.alert || { upper: Math.round(currentPrice * 1.08), lower: Math.round(currentPrice * 0.88) }
+  const probBreakUpper = (() => {
+    const risk = pa.forecast?.scenarios?.pessimistic || []
+    const upper = alertBase.upper
+    let prob = alertBase.probBreakUpper || 30
+    if (risk.some((d) => d.price >= upper)) prob = Math.max(prob, 68)
+    if (currentPrice >= upper * 0.96) prob = Math.min(95, prob + 20)
+    return prob
+  })()
+
   const attribution = {
     ...(pa.attribution || {}),
     historicalCompare: pa.attribution?.historicalCompare || [
       { event: '2024-Q2 原料涨价周期', similarity: 76, diff: '本次海运运费贡献更高，需求端更弱' },
       { event: '2023-W45 贸易政策扰动', similarity: 62, diff: '政策预期占比更高，库存水平更低' },
     ],
-    methods: ['多元回归', '方差分解', '时间序列STL分解'],
+    methods: ['多元回归分析', '方差分解', '时间序列STL分解'],
   }
 
   return {
@@ -1357,17 +1509,22 @@ export function getPriceAnalysisData(name, granularity = 'month', timeRange = '6
     granularity,
     timeRange,
     productName: name,
+    catalogParent: parent,
     currentPrice,
     dailyChange,
+    weeklyChange,
+    benchmarkRatio: parent === '电子产品' ? 0.94 : 0.97,
     dataSources: DEFAULT_DATA_SOURCES,
     standardization: buildStandardization(pa.indices),
     seasonalHeatmap: buildSeasonalHeatmap(currentPrice),
-    influenceFactors: buildInfluenceFactors(pa, name),
+    influenceFactors: buildInfluenceFactors(pa, parent),
     factorDatabase: buildFactorDatabase(pa.drivers),
     attribution,
-    alert: pa.forecast?.alert || { upper: 150, lower: 125, triggered: false, probBreakUpper: 42 },
+    supplyDisruption: buildSupplyDisruption(pa, parent),
+    alert: { ...alertBase, probBreakUpper },
     hedging: pa.forecast?.hedging,
     model: pa.forecast?.model || 'PC-Stacking (LSTM+RF+XGB)',
+    filterNote: pa.filterNote,
   }
 }
 
@@ -1434,6 +1591,19 @@ const SUPPLY_DEMAND_DATA = {
       ],
       suggestions: ['提前锁定Q3货源', '评估中欧班列替代', '增加安全库存15天'],
     },
+    dataSources: [
+      { type: '官方统计', sources: ['中国海关', '欧盟统计局', '美国BEA'], freq: '月度', method: '产量+进出口交叉验证' },
+      { type: '行业协会', sources: ['国际铜业协会', '世界钢铁协会'], freq: '季度', method: '产能利用率与出货调研' },
+      { type: '卫星遥感', sources: ['港口货物堆积', '矿山开采强度'], freq: '周度', method: '遥感+地面校准' },
+      { type: '表观消费', sources: ['产量+进口-出口'], freq: '月度', method: '公式估算' },
+      { type: '库存链条', sources: ['LME/SHFE', '港口', '生产企业', '流通商'], freq: '周度', method: '全链条汇总' },
+    ],
+    chainStages: [
+      { stage: '原材料产地', nodes: ['中国河北钢材', '巴西铁矿'], status: '偏紧', metric: '原料到货周期 +5天' },
+      { stage: '加工基地', nodes: ['长三角汽配集群', '珠三角代工'], status: '正常', metric: '产能利用率 78%' },
+      { stage: '运输枢纽', nodes: ['上海港', '汉堡港', '苏伊士运河'], status: '拥堵', metric: '平均等待 18h' },
+      { stage: '消费终端', nodes: ['欧盟售后市场', '北美4S渠道'], status: '旺盛', metric: '订单增速 +6.5%' },
+    ],
   },
   电子产品: {
     balance: {
@@ -1471,9 +1641,28 @@ const SUPPLY_DEMAND_DATA = {
     bottleneck: {
       event: '先进制程芯片分配紧张',
       affected: ['高端路由器交期延长至16周', '部分型号涨价8-12%'],
-      simulation: [{ region: '欧洲', delay: 0, costUp: 10 }, { region: '北美', delay: 0, costUp: 12 }],
-      suggestions: ['锁定长协芯片配额', '评估中端替代方案'],
+      simulation: [{ region: '欧洲', delay: 0, costUp: 10 }, { region: '北美', delay: 0, costUp: 12 }, { region: '东盟', delay: 5, costUp: 6 }],
+      propagationHeatmap: [
+        { region: '欧洲', delay: 0, cost: 10 },
+        { region: '北美', delay: 0, cost: 12 },
+        { region: '东盟', delay: 5, cost: 6 },
+        { region: '中国', delay: 3, cost: 4 },
+      ],
+      suggestions: ['锁定长协芯片配额', '评估中端替代方案', '分散二级供应商'],
     },
+    dataSources: [
+      { type: '官方统计', sources: ['工信部', '越南工贸部'], freq: '月度', method: '产量统计' },
+      { type: '行业协会', sources: ['SEMI', '中国信通院'], freq: '月度', method: '出货与订单' },
+      { type: '卫星遥感', sources: ['晶圆厂开工强度'], freq: '周度', method: '间接估算' },
+      { type: '表观消费', sources: ['产量+进口-出口'], freq: '月度', method: '公式估算' },
+      { type: '库存链条', sources: ['渠道库存', '工厂库存', '港口'], freq: '周度', method: '渠道调研' },
+    ],
+    chainStages: [
+      { stage: '原材料产地', nodes: ['台积电/三星晶圆', 'PCB基材'], status: '紧张', metric: '先进制程分配率 92%' },
+      { stage: '加工基地', nodes: ['深圳组装', '越南代工'], status: '繁忙', metric: '产能利用率 85%' },
+      { stage: '运输枢纽', nodes: ['盐田港', '洛杉矶港'], status: '正常', metric: '集装箱周转 32天' },
+      { stage: '消费终端', nodes: ['5G基建', '数据中心'], status: '旺盛', metric: '订单增速 +9.5%' },
+    ],
   },
   机械设备: {
     balance: {
@@ -1488,6 +1677,18 @@ const SUPPLY_DEMAND_DATA = {
     tradeHeatmap: [{ region: '东盟', import: 78, export: 65, intensity: 72 }],
     nodes: [{ node: '鹿特丹港', metric: '散货吞吐', value: '正常', status: '正常', alert: false }],
     bottleneck: { event: '暂无重大瓶颈', affected: [], simulation: [], suggestions: ['维持现有采购节奏'] },
+    dataSources: [
+      { type: '官方统计', sources: ['德国联邦统计局', '中国海关总署'], freq: '月度', method: '机床产量统计' },
+      { type: '行业协会', sources: ['VDMA', '中国机床工业协会'], freq: '季度', method: '订单与出货' },
+      { type: '表观消费', sources: ['产量+进口-出口'], freq: '月度', method: '公式估算' },
+      { type: '库存链条', sources: ['生产企业', '经销商'], freq: '月度', method: '渠道调研' },
+    ],
+    chainStages: [
+      { stage: '原材料产地', nodes: ['特种钢', '高端轴承'], status: '正常', metric: '到货稳定' },
+      { stage: '加工基地', nodes: ['德国慕尼黑', '中国苏州'], status: '偏紧', metric: '交期 16周' },
+      { stage: '运输枢纽', nodes: ['鹿特丹港', '上海港'], status: '正常', metric: '散货吞吐正常' },
+      { stage: '消费终端', nodes: ['汽车制造', '航空航天'], status: '回升', metric: '订单增速 +4.5%' },
+    ],
   },
 }
 
@@ -1583,19 +1784,135 @@ export const BARRIER_TYPE_OPTIONS = [
   { value: '出口管制', label: '出口管制' },
 ]
 
-export function getSupplyDemandData(name) {
-  return SUPPLY_DEMAND_DATA[name] || SUPPLY_DEMAND_DATA['汽车配件']
+export function getSupplyDemandData(name, filters = {}) {
+  const parent = resolveSupplyDemandParent(name)
+  const base = SUPPLY_DEMAND_DATA[parent] || SUPPLY_DEMAND_DATA['汽车配件']
+  const dirSku = PRODUCT_DIRECTORY.find((d) => d.name === name)
+  let data = JSON.parse(JSON.stringify(base))
+
+  if (dirSku && dirSku.parent === parent && dirSku.tradeIndex) {
+    const ratio = dirSku.tradeIndex / 85
+    data.balance.supply.total = Math.round(data.balance.supply.total * ratio)
+    data.balance.demand.total = Math.round(data.balance.demand.total * ratio)
+    data.balance.inventory.total = Math.round(data.balance.inventory.total * ratio)
+  }
+
+  data = applySupplyDemandFilters(data, filters)
+  data.productName = name
+  data.catalogParent = parent
+  data.inventoryRatioSeries = buildInventoryRatioSeries(data.balance.history, data.balance.demand.total)
+  data.statusMigration = buildStatusMigration(data.balance.gap)
+  data.dataSources = data.dataSources || DEFAULT_SD_DATA_SOURCES
+  data.chainStages = data.chainStages || []
+  return data
 }
 
-export function getTradeBarrierData(name, country = 'all') {
-  const base = TRADE_BARRIER_DATA[name] || TRADE_BARRIER_DATA['汽车配件']
-  const barriers = country === 'all' ? base.barriers : base.barriers.filter((b) => b.country.includes(country) || country.includes(b.country))
-  return { ...base, barriers: barriers.length ? barriers : base.barriers }
+function resolveSupplyDemandParent(name) {
+  if (['汽车配件', '电子产品', '机械设备'].includes(name)) return name
+  const dir = PRODUCT_DIRECTORY.find((d) => d.name === name)
+  if (dir?.parent) return dir.parent
+  if (/刹|汽配|配件|底盘/i.test(name)) return '汽车配件'
+  if (/5g|电子|光纤|电路|pcb/i.test(name)) return '电子产品'
+  if (/机床|机械|泵|cnc/i.test(name)) return '机械设备'
+  return '汽车配件'
+}
+
+const DEFAULT_SD_DATA_SOURCES = [
+  { type: '官方统计', sources: ['海关', '统计局'], freq: '月度', method: '产量统计' },
+  { type: '行业协会', sources: ['国际行业协会报告'], freq: '季度', method: '产能调研' },
+  { type: '卫星遥感', sources: ['港口/矿山/农田遥感'], freq: '周度', method: '间接估算+专家修正' },
+  { type: '表观消费', sources: ['产量+进口-出口'], freq: '月度', method: '公式计算' },
+  { type: '库存链条', sources: ['交易所/港口/企业/流通'], freq: '周度', method: '全链条汇总' },
+]
+
+function applySupplyDemandFilters(data, filters = {}) {
+  const { targetMarket = 'all' } = filters
+  if (targetMarket === 'all') return data
+  const adjMap = { 德国: 1.08, 美国: 1.12, 东盟: 1.15, 中东: 0.9, 日本: 1.02 }
+  const mult = adjMap[targetMarket] || 1.05
+  return {
+    ...data,
+    balance: {
+      ...data.balance,
+      demand: {
+        ...data.balance.demand,
+        total: Math.round(data.balance.demand.total * mult),
+      },
+    },
+    filterNote: `目标市场聚焦：${targetMarket}`,
+  }
+}
+
+function buildInventoryRatioSeries(history = []) {
+  return history.map((h) => ({
+    period: h.period,
+    ratio: Math.round((h.inventory / Math.max(h.demand, 1)) * 100) / 100,
+  }))
+}
+
+function buildStatusMigration(gap = []) {
+  return gap.map((g, i) => ({ month: g.month, status: g.status, gap: g.gap, order: i }))
+}
+
+export function getTradeBarrierData(name, country = 'all', options = {}) {
+  const parent = resolveTradeBarrierParent(name)
+  const base = TRADE_BARRIER_DATA[parent] || TRADE_BARRIER_DATA['汽车配件']
+  let barriers = (base.barriers || []).map((b) => enrichBarrierEntryLocal(b))
+
+  if (country !== 'all') {
+    const filtered = barriers.filter((b) => b.country.includes(country) || country.includes(b.country))
+    barriers = filtered.length ? filtered : barriers
+  }
+
+  if (options.barrierType && options.barrierType !== 'all') {
+    barriers = barriers.filter((b) => b.type === options.barrierType)
+  }
+
+  return {
+    ...base,
+    barriers,
+    productName: name,
+    catalogParent: parent,
+    syncMeta: {
+      lastSync: '2026-07-02 09:30',
+      sources: ['WTO TBT/SPS 通报', '各国海关官网', 'USTR/欧盟委员会', '行业权威机构'],
+      coverage: `${barriers.length} 条壁垒 · ${new Set(barriers.map((b) => b.country)).size} 个国家/地区`,
+    },
+  }
+}
+
+function resolveTradeBarrierParent(name) {
+  if (['汽车配件', '电子产品', '机械设备'].includes(name)) return name
+  const dir = PRODUCT_DIRECTORY.find((d) => d.name === name)
+  if (dir?.parent) return dir.parent
+  if (/刹|汽配|配件/i.test(name)) return '汽车配件'
+  if (/5g|电子|光纤|电路/i.test(name)) return '电子产品'
+  if (/机床|机械|泵/i.test(name)) return '机械设备'
+  return '汽车配件'
+}
+
+function enrichBarrierEntryLocal(barrier) {
+  const difficultyMap = {
+    关税: '低', 配额: '中', 禁令: '高', TBT: '高', SPS: '高',
+    反倾销: '高', 反补贴: '高', 保障措施: '中', 许可证: '中',
+    知识产权: '中', 绿色壁垒: '高', 出口管制: '高',
+  }
+  const impactMap = {
+    关税: '到岸成本', 配额: '进口数量', TBT: '通关时效', SPS: '检验检疫',
+    反倾销: '到岸成本', 反补贴: '到岸成本', 出口管制: '市场准入',
+  }
+  return {
+    ...barrier,
+    complianceDifficulty: barrier.complianceDifficulty || difficultyMap[barrier.type] || '中',
+    effectivePeriod: barrier.effectivePeriod || (barrier.status === '调查中' ? '待定（6-12月）' : '即时生效'),
+    impactScope: barrier.impactScope || impactMap[barrier.type] || '综合贸易',
+    updatedAt: barrier.updatedAt || '2026-07-02',
+  }
 }
 
 export function calcBarrierCost(cargoValue, route, options = {}) {
   const value = Number(cargoValue) || 0
-  const { origin = '中国', targetMarket = '德国', barriers = [] } = options
+  const { origin = '中国', targetMarket = '德国', barriers = [], tradeTerm = 'CIF', quantity = 1000 } = options
   const ftaDiscount = origin === '中国' && /东盟|越南|RCEP/i.test(route.name || '')
     ? 0.65
     : origin !== '中国' && /自贸|东盟|越南/i.test(route.name || '')
@@ -1604,28 +1921,37 @@ export function calcBarrierCost(cargoValue, route, options = {}) {
         ? 0.7
         : 1
   const marketFactor = targetMarket.includes('美国') ? 1.08 : targetMarket.includes('巴西') ? 1.12 : targetMarket.includes('日本') ? 1.05 : 1
-  const matchedBarrier = (barriers || []).find((b) => targetMarket.includes(b.country) || b.country.includes(targetMarket))
-  const extraAddDuty = matchedBarrier && /反倾销|反补贴/i.test(matchedBarrier.type || '')
-    ? Number(String(matchedBarrier.rate).replace(/[^\d.]/g, '')) || 0
-    : 0
+  const matched = (barriers || []).filter((b) => targetMarket.includes(b.country) || b.country.includes(targetMarket))
+  const extraAddDuty = matched
+    .filter((b) => /反倾销|反补贴/.test(b.type || ''))
+    .reduce((sum, b) => sum + (Number(String(b.rate).replace(/[^\d.]/g, '')) || 0), 0)
+  const hasQuota = matched.some((b) => b.type === '配额')
+  const hasTbtSps = matched.some((b) => b.type === 'TBT' || b.type === 'SPS')
+  const termFactor = { CIF: 1.02, FOB: 1.0, CFR: 1.01, DDP: 1.05 }[tradeTerm] || 1
   const tariffRate = route.tariff * ftaDiscount * marketFactor
-  const tariffCost = value * (tariffRate / 100)
+  const tariffCost = value * (tariffRate / 100) * termFactor
   const vatCost = (value + tariffCost) * (route.vat / 100)
   const addDuty = value * ((route.addDuty + extraAddDuty) / 100)
+  const quotaFee = hasQuota ? value * 0.015 : 0
+  const inspection = hasTbtSps ? value * 0.012 : value * 0.005
   const agency = value * (route.agency / 100)
-  const total = value + tariffCost + vatCost + addDuty + agency
+  const total = value + tariffCost + vatCost + addDuty + quotaFee + inspection + agency
   return {
     cargoValue: value,
+    quantity,
+    tradeTerm,
     tariffCost: Math.round(tariffCost * 100) / 100,
     vatCost: Math.round(vatCost * 100) / 100,
     addDuty: Math.round(addDuty * 100) / 100,
+    quotaFee: Math.round(quotaFee * 100) / 100,
+    inspectionCost: Math.round(inspection * 100) / 100,
     agency: Math.round(agency * 100) / 100,
     total: Math.round(total * 100) / 100,
     rateTotal: Math.round((tariffRate + route.vat + route.addDuty + extraAddDuty + route.agency) * 10) / 10,
     origin,
     targetMarket,
     ftaApplied: ftaDiscount < 1,
-    note: ftaDiscount < 1 ? `已按原产地「${origin}」适用优惠路径折扣` : `按原产地「${origin}」→「${targetMarket}」标准路径测算`,
+    note: ftaDiscount < 1 ? `已按原产地「${origin}」适用优惠路径（${tradeTerm}）` : `标准路径 ${origin}→${targetMarket}（${tradeTerm}）`,
   }
 }
 
@@ -1819,6 +2145,15 @@ export const ENTERPRISE_EXTENDED = {
       checks: ['建议核查德国子公司实缴资本', '确认核心产能8800万件/年'],
       summary: '综合信用AAA，经营稳健，适合作为核心供应商/战略合作伙伴。',
     },
+    dataSources: ['工商注册', '海关进出口', '专利商标', '司法诉讼', '舆情新闻', '招投标', '社交媒体'],
+    equityHistory: [
+      { year: '2019', event: '华贸控股持股比例调整至75%' },
+      { year: '2021', event: '收购深圳华贸物流100%股权' },
+      { year: '2023', event: '德国销售子公司持股提升至80%' },
+    ],
+    tradeNetworkAlerts: [
+      { level: 'warning', title: '前三大供应商占比75%', desc: '供应链集中度偏高，建议分散采购', date: '2026-06-18' },
+    ],
   },
   远洋供应链公司: {
     scope: '跨境供应链整合、海运空运、保税仓储',
@@ -1965,10 +2300,133 @@ export const ENTERPRISE_EXTENDED = {
 }
 
 export const ENTERPRISE_SORT_OPTIONS = [
-  { value: 'creditScore', label: '信用等级' },
   { value: 'healthScore', label: '健康度' },
+  { value: 'creditScore', label: '信用等级' },
   { value: 'revenue', label: '营收规模' },
+  { value: 'confidence', label: '匹配度' },
 ]
+
+export const ENTERPRISE_TYPE_OPTIONS = [
+  { value: 'all', label: '全部行业' },
+  { value: '进出口贸易', label: '进出口贸易' },
+  { value: '供应链服务', label: '供应链服务' },
+  { value: '跨境贸易', label: '跨境贸易' },
+  { value: '制造加工', label: '制造加工' },
+  { value: '物流服务', label: '物流服务' },
+]
+
+export const ENTERPRISE_HEALTH_FILTER_OPTIONS = [
+  { value: 'all', label: '全部健康度' },
+  { value: '优秀', label: '优秀(90+)' },
+  { value: '良好', label: '良好(75-89)' },
+  { value: '一般', label: '一般(60-74)' },
+  { value: '预警', label: '预警(<60)' },
+]
+
+export const ENTERPRISE_RISK_FILTER_OPTIONS = [
+  { value: 'all', label: '全部风险' },
+  { value: '低', label: '低风险' },
+  { value: '中', label: '中风险' },
+  { value: '高', label: '高风险' },
+]
+
+/** 企业库目录（内联检索列表） */
+export const ENTERPRISE_DIRECTORY = [
+  { id: 'ent-001', name: '华贸进出口集团', type: '进出口贸易', region: '广东深圳', industry: '汽车配件/机电', keywords: ['华贸', '汽配', '进出口', '深圳'], updateDate: '2026-07-02' },
+  { id: 'ent-002', name: '远洋供应链公司', type: '供应链服务', region: '上海', industry: '跨境物流/仓储', keywords: ['远洋', '供应链', '物流', '上海'], updateDate: '2026-06-28' },
+  { id: 'ent-003', name: '丝路跨境贸易', type: '跨境贸易', region: '浙江杭州', industry: '中东/中亚贸易', keywords: ['丝路', '跨境', '中东', '杭州'], updateDate: '2026-06-25' },
+  { id: 'ent-004', name: '华南汽配供应链', type: '制造加工', region: '广东东莞', industry: '汽车零部件', keywords: ['汽配', '供应链', '刹车片', '东莞'], updateDate: '2026-06-20' },
+  { id: 'ent-005', name: '德意志工业代理', type: '进出口贸易', region: '德国慕尼黑', industry: '工业设备分销', keywords: ['德国', '工业', '代理', '欧洲'], updateDate: '2026-06-18' },
+  { id: 'ent-006', name: '日韩电子联盟', type: '制造加工', region: '韩国首尔', industry: '电子元器件', keywords: ['电子', '韩国', '日本', '元器件'], updateDate: '2026-06-15' },
+  { id: 'ent-007', name: '万向跨境供应链', type: '供应链服务', region: '浙江宁波', industry: '综合供应链', keywords: ['万向', '跨境', '宁波', '供应链'], updateDate: '2026-06-12' },
+  { id: 'ent-008', name: '中东能源贸易', type: '跨境贸易', region: '阿联酋迪拜', industry: '能源/机械设备', keywords: ['中东', '能源', '迪拜', '机械'], updateDate: '2026-06-10' },
+]
+
+function healthLevelScore(level) {
+  if (level === '优秀') return 95
+  if (level === '良好') return 82
+  if (level === '一般') return 68
+  if (level === '预警') return 48
+  if (level === '高危') return 30
+  return 70
+}
+
+function inferRiskLevel(ent) {
+  const dd = ent.dueDiligence?.riskLevel
+  if (dd) return dd
+  if ((ent.litigation || 0) > 0 || (ent.penalties || 0) > 1) return '高'
+  if ((ent.penalties || 0) > 0 || (ent.healthScore || 0) < 70) return '中'
+  return '低'
+}
+
+export function semanticSearchEnterprises(keyword = '', filters = {}, sortBy = 'healthScore') {
+  const q = (keyword || '').trim().toLowerCase()
+  const keywordRaw = (keyword || '').trim()
+
+  let results = ENTERPRISE_DIRECTORY.map((row) => {
+    const ent = getEnterpriseDetail(row.name)
+    const revenue = ent.revenueTrend?.[ent.revenueTrend.length - 1]?.revenue || 0
+    const riskLevel = inferRiskLevel(ent)
+    let confidence = q ? 0 : 76
+
+    if (q) {
+      if (row.name.toLowerCase() === q) confidence = 99
+      else if (row.name.includes(keywordRaw) || keywordRaw.includes(row.name)) confidence = 96
+      else if (row.type.includes(keywordRaw) || row.industry.includes(keywordRaw)) confidence = 88
+      else if (row.region.includes(keywordRaw) || formatGeoLocation(ent).includes(keywordRaw)) confidence = 85
+      else if (row.keywords?.some((k) => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()))) confidence = 90
+      else if (ent.scope?.includes(keywordRaw)) confidence = 78
+      else if (String(ent.id).toLowerCase().includes(q)) confidence = 82
+    }
+
+    return {
+      id: row.id,
+      name: row.name,
+      type: row.type,
+      region: row.region,
+      industry: row.industry,
+      scope: ent.scope || row.industry,
+      founded: ent.founded,
+      healthScore: ent.healthScore || healthLevelScore(ent.healthLevel),
+      healthLevel: ent.healthLevel || '一般',
+      creditScore: ent.creditScore || 0,
+      creditLevel: ent.creditLevel || '-',
+      revenue,
+      marketShare: ent.marketShare,
+      industryRank: ent.industryRank,
+      riskLevel,
+      geoLabel: formatGeoLocation(ent),
+      confidence,
+      updateDate: row.updateDate || ent.archive?.updateDate || '2026-07-02',
+      litigation: ent.litigation || 0,
+      penalties: ent.penalties || 0,
+    }
+  }).filter((r) => r.confidence >= 40)
+
+  if (filters.industryType && filters.industryType !== 'all') {
+    results = results.filter((r) => r.type === filters.industryType).map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 5) }))
+  }
+  if (filters.healthLevel && filters.healthLevel !== 'all') {
+    results = results.filter((r) => r.healthLevel === filters.healthLevel).map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 4) }))
+  }
+  if (filters.riskLevel && filters.riskLevel !== 'all') {
+    results = results.filter((r) => r.riskLevel === filters.riskLevel).map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 3) }))
+  }
+  if (filters.geoMacro && filters.geoMacro !== 'all') {
+    results = results.filter((e) => matchesGeoFilter(getEnterpriseDetail(e.name), filters)).map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 6) }))
+  } else if (filters.geoCountry && filters.geoCountry !== 'all') {
+    results = results.filter((e) => matchesGeoFilter(getEnterpriseDetail(e.name), filters)).map((r) => ({ ...r, confidence: Math.min(99, r.confidence + 5) }))
+  }
+
+  const sorter = {
+    creditScore: (a, b) => b.creditScore - a.creditScore,
+    healthScore: (a, b) => b.healthScore - a.healthScore,
+    revenue: (a, b) => b.revenue - a.revenue,
+    confidence: (a, b) => b.confidence - a.confidence,
+  }[sortBy] || ((a, b) => b.healthScore - a.healthScore)
+
+  return results.sort((a, b) => sorter(a, b) || a.name.localeCompare(b.name, 'zh-CN'))
+}
 
 export function searchEnterprises(keyword = '', sortBy = 'creditScore', geoFilters = {}) {
   const list = Object.keys(ENTERPRISE_CATALOG).map((name) => getEnterpriseDetail(name))
@@ -1989,11 +2447,41 @@ export function searchEnterprises(keyword = '', sortBy = 'creditScore', geoFilte
 }
 
 export function getEnterpriseDetail(name) {
-  const key = Object.keys(ENTERPRISE_CATALOG).find((k) => k.includes(name) || name.includes(k)) || '华贸进出口集团'
-  const base = ENTERPRISE_CATALOG[key]
-  const ext = ENTERPRISE_EXTENDED[key] || {}
-  const merged = applyGeoLocation({ ...base, ...ext, name: base.name }, ENTERPRISE_GEO_SEED)
-  return merged
+  const exactKey = Object.keys(ENTERPRISE_CATALOG).find((k) => k === name)
+  const fuzzyKey = Object.keys(ENTERPRISE_CATALOG).find((k) => k.includes(name) || name.includes(k))
+  const key = exactKey || fuzzyKey
+  if (key) {
+    const base = ENTERPRISE_CATALOG[key]
+    const ext = ENTERPRISE_EXTENDED[key] || {}
+    return applyGeoLocation({ ...base, ...ext, name: base.name }, ENTERPRISE_GEO_SEED)
+  }
+  const dir = ENTERPRISE_DIRECTORY.find((d) => d.name === name)
+  if (dir) {
+    const base = ENTERPRISE_CATALOG['丝路跨境贸易']
+    const ext = ENTERPRISE_EXTENDED['丝路跨境贸易'] || {}
+    return applyGeoLocation({
+      ...base,
+      ...ext,
+      name: dir.name,
+      id: dir.id,
+      type: dir.type,
+      region: dir.region,
+      scope: `${dir.industry} · ${dir.region}`,
+      industryRank: '细分领域企业',
+      marketShare: '区域活跃',
+      healthScore: 74,
+      healthLevel: '良好',
+      creditScore: 76,
+      creditLevel: 'A',
+      competitorAnalysis: ext.competitorAnalysis,
+      partnerEval: ext.partnerEval,
+      benchmarks: ext.benchmarks,
+      dueDiligence: { riskLevel: '中', checks: [`建议进一步核查${dir.name}实际控制人背景`], summary: `${dir.name}为产业链关联企业，建议结合贸易记录开展尽调。` },
+    }, ENTERPRISE_GEO_SEED)
+  }
+  const fallback = ENTERPRISE_CATALOG['华贸进出口集团']
+  const ext = ENTERPRISE_EXTENDED['华贸进出口集团'] || {}
+  return applyGeoLocation({ ...fallback, ...ext, name: fallback.name }, ENTERPRISE_GEO_SEED)
 }
 
 export function getCompetitorAnalysis(name) {
@@ -2050,7 +2538,8 @@ export function buildDueDiligenceReport(name) {
   const dd = ent.dueDiligence || {}
   return {
     title: `${ent.name} · 初步尽职调查报告`,
-    generatedAt: '2026-07-02',
+    generatedAt: new Date().toLocaleString('zh-CN'),
+    durationMinutes: 3.2,
     basic: { name: ent.name, id: ent.id, type: ent.type, region: ent.region, founded: ent.founded, scope: ent.scope },
     finance: ent.revenueTrend,
     risks: {
@@ -2061,6 +2550,9 @@ export function buildDueDiligenceReport(name) {
     },
     trade: ent.tradeHistory,
     network: ent.tradeNetwork,
+    equity: ent.equityGraph,
+    equityHistory: ent.equityHistory || [],
+    dataSources: ent.dataSources || [],
     score: ent.healthScore,
     level: ent.healthLevel,
     checks: dd.checks || [],

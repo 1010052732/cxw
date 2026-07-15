@@ -105,7 +105,7 @@ export default function CompetitionTab({ country, category, onCategoryChange, on
                 yField="value"
                 height={260}
                 color={(d) => (d.isSelf ? '#B32620' : '#8c8c8c')}
-                label={{ position: 'top', formatter: (v) => `${v.value}%` }}
+                label={{ position: 'top', text: (v) => `${v.value}%` }}
               />
             </div>
             <Table
@@ -151,7 +151,7 @@ export default function CompetitionTab({ country, category, onCategoryChange, on
             colorField="name"
             height={320}
             pointStyle={{ fillOpacity: 0.85 }}
-            label={{ formatter: (d) => d.name }}
+            label={{ text: (d) => d.name }}
             xAxis={{ title: { text: data.pcaAxes?.xLabel || '价格水平 →' } }}
             yAxis={{ title: { text: data.pcaAxes?.yLabel || '质量感知 →' } }}
           />

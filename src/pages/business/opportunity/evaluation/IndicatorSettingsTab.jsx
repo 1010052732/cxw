@@ -35,6 +35,7 @@ import {
   SUB_INDICATOR_GROUPS,
   WEIGHT_SCHEMES,
 } from '../../../../mock/opportunity'
+import { INDICATOR_DEFINITIONS } from '../indicatorEngine'
 import CustomIndicatorBuilder from './CustomIndicatorBuilder'
 import {
   appendAuditEntry,
@@ -114,27 +115,34 @@ export default function IndicatorSettingsTab({
   const [auditLog, setAuditLog] = useState(() => loadAuditLog())
   const [expandedDim, setExpandedDim] = useState('market')
 
-  const presetTableData = useMemo(
-    () =>
-      EVAL_INDICATOR_MODELS.flatMap((model) =>
-        model.indicators.flatMap((g) =>
-          g.items.map((item, idx) => ({
+  const presetTableData = useMemo(() => {
+    const defMap = new Map(INDICATOR_DEFINITIONS.map((d) => [d.label.replace(/\s*\([^)]*\)/, ''), d]))
+    return EVAL_INDICATOR_MODELS.flatMap((model) =>
+      model.indicators.flatMap((g) =>
+        g.items.map((item, idx) => {
+          const def = INDICATOR_DEFINITIONS.find((d) => d.label.includes(item) || item.includes(d.label.split(' ')[0]))
+            || defMap.get(item)
+          return {
             key: `${model.id}-${g.group}-${idx}`,
             model: model.name,
             dimension: DIMENSIONS.find((d) => d.key === model.dimension)?.label,
             group: g.group,
             indicator: item,
-          })),
-        ),
+            formula: def?.formula || '—',
+            unit: def?.unit || '—',
+          }
+        }),
       ),
-    [],
-  )
+    )
+  }, [])
 
   const presetColumns = [
-    { title: '模型名称', dataIndex: 'model', key: 'model', width: 160 },
-    { title: '评估维度', dataIndex: 'dimension', key: 'dimension', width: 120 },
-    { title: '指标分组', dataIndex: 'group', key: 'group', width: 100 },
-    { title: '具体指标', dataIndex: 'indicator', key: 'indicator' },
+    { title: '模型名称', dataIndex: 'model', key: 'model', width: 140 },
+    { title: '评估维度', dataIndex: 'dimension', key: 'dimension', width: 110 },
+    { title: '指标分组', dataIndex: 'group', key: 'group', width: 90 },
+    { title: '具体指标', dataIndex: 'indicator', key: 'indicator', width: 140 },
+    { title: '计算公式', dataIndex: 'formula', key: 'formula', ellipsis: true },
+    { title: '单位', dataIndex: 'unit', key: 'unit', width: 72 },
   ]
 
   const handleWeightChange = (key, value) => {
@@ -284,7 +292,7 @@ export default function IndicatorSettingsTab({
           <div className="business-panel">
             <h3 className="business-panel-title">预置指标库与模型</h3>
             <Paragraph type="secondary" style={{ fontSize: 13 }}>
-              三大核心维度：市场需求（有没有空间）· 政策环境（有没有制度支持）· 交易信用（有没有交易安全性）
+              三大核心维度共 27 项指标，计算逻辑与《商机识别系统指标计算逻辑》一致；配置权重后运行评估，分数将同步至分类、大厅与详情页。
             </Paragraph>
             <Table
               size="small"

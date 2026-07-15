@@ -110,7 +110,7 @@ const WORKFLOW_DETAIL_FIELDS = [
   'tags', 'group', 'score', 'status', 'followStatus', 'ownerId', 'ownerName',
   'assignedUserId', 'assignedUserName', 'assignedTo', 'favoriteUserIds', 'favorited',
   'marked', 'dynamicAlert', 'updatedAt', 'riskLevel', 'revenueRange', 'marketSize',
-  'policyFriendliness', 'marketScore', 'policyScore', 'creditScore',
+  'policyFriendliness', 'marketScore', 'policyScore', 'creditScore', 'compositeScore', 'indicatorScores',
   'geoMacro', 'geoCountry', 'geoCity', 'geoLabel',
   'sourceMacro', 'sourceCountry', 'sourceCity', 'sourceRegion', 'sourceLabel',
 ]
@@ -586,7 +586,7 @@ export default function OpportunityDetailPage() {
                   height={260}
                   xAxis={{ title: { text: '价格定位' } }}
                   yAxis={{ title: { text: '质量定位' } }}
-                  label={{ formatter: (d) => d.name }}
+                  label={{ text: (d) => d.name }}
                 />
               </div>
               <Text type="secondary" style={{ fontSize: 12 }}>竞争定位矩阵：气泡大小映射市场份额</Text>

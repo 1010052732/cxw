@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   App,
   Button,
@@ -15,10 +14,20 @@ import {
 } from 'antd'
 import { Column } from '@ant-design/charts'
 import { BulbOutlined, TrophyOutlined } from '@ant-design/icons'
-import { getBenchmarkData, getEnterpriseDetail } from '../../../../mock/analysis'
+import { getBenchmarkData } from '../../../../mock/analysis'
 import { exportJsonAsTxt } from '../analysisExport'
 
 const { Text, Paragraph } = Typography
+
+import EnterpriseSwitcher from './EnterpriseSwitcher'
+
+const BENCHMARK_MODE_OPTIONS = [
+  { value: 'all', label: '全部推荐' },
+  { value: '规模对标', label: '规模对标' },
+  { value: '路径对标', label: '路径对标' },
+  { value: '运营对标', label: '运营对标' },
+  { value: '区域对标', label: '区域对标' },
+]
 
 const SHORTBOARD_OPTIONS = [
   { value: '综合', label: '综合' },
@@ -56,16 +65,15 @@ function practiceMatchesShortboard(practice, type) {
   return keywords.some((k) => domain.includes(k))
 }
 
-export default function BenchmarkTab({ enterpriseName }) {
+export default function BenchmarkTab({ enterpriseName, onGoQuery }) {
   const { message } = App.useApp()
-  const navigate = useNavigate()
-  const ent = useMemo(() => getEnterpriseDetail(enterpriseName), [enterpriseName])
   const data = useMemo(() => getBenchmarkData(enterpriseName), [enterpriseName])
   const peerOptions = useMemo(
     () => (data.recommended || []).map((p) => ({ value: p.name, label: `${p.name} · ${p.type}` })),
     [data.recommended],
   )
   const [selectedPeer, setSelectedPeer] = useState(null)
+  const [benchmarkMode, setBenchmarkMode] = useState('all')
   const [shortboardType, setShortboardType] = useState('综合')
 
   useEffect(() => {
@@ -76,6 +84,12 @@ export default function BenchmarkTab({ enterpriseName }) {
     }
     setSelectedPeer((prev) => (prev && names.includes(prev) ? prev : names[0]))
   }, [enterpriseName, data.recommended])
+
+  const filteredRecommended = useMemo(() => {
+    const list = data.recommended || []
+    if (benchmarkMode === 'all') return list
+    return list.filter((p) => p.type === benchmarkMode || p.type.includes(benchmarkMode.replace('对标', '')))
+  }, [data.recommended, benchmarkMode])
 
   const filteredGaps = useMemo(() => {
     const gaps = data.gaps || []
@@ -113,36 +127,25 @@ export default function BenchmarkTab({ enterpriseName }) {
   return (
     <>
       <div className="business-filter-bar">
+        <EnterpriseSwitcher enterpriseName={enterpriseName} onGoQuery={onGoQuery} />
         <Space wrap>
-          <Text>对标主体</Text>
-          <Tag color="processing">{enterpriseName}</Tag>
+          <Text>对标模式</Text>
+          <Select value={benchmarkMode} style={{ width: 120 }} options={BENCHMARK_MODE_OPTIONS} onChange={setBenchmarkMode} />
           {peerOptions.length > 0 && (
             <>
               <Text>标杆企业</Text>
-              <Select
-                value={selectedPeer}
-                style={{ width: 220 }}
-                options={peerOptions}
-                onChange={setSelectedPeer}
-                placeholder="选择标杆企业"
-              />
+              <Select value={selectedPeer} style={{ width: 220 }} options={peerOptions} onChange={setSelectedPeer} placeholder="选择标杆企业" />
             </>
           )}
           <Text>短板维度</Text>
-          <Select
-            value={shortboardType}
-            style={{ width: 120 }}
-            options={SHORTBOARD_OPTIONS}
-            onChange={setShortboardType}
-          />
+          <Select value={shortboardType} style={{ width: 120 }} options={SHORTBOARD_OPTIONS} onChange={setShortboardType} />
         </Space>
-        <Button onClick={() => navigate('/analysis/market')}>返回市场分析</Button>
       </div>
 
       <div className="business-panel">
         <h3 className="business-panel-title"><TrophyOutlined /> 智能标杆推荐</h3>
         <Row gutter={12}>
-          {(data.recommended || []).map((b) => (
+          {filteredRecommended.map((b) => (
             <Col xs={24} sm={8} key={b.name}>
               <Card
                 size="small"

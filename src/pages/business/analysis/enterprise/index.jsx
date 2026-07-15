@@ -19,7 +19,6 @@ import '../../business.css'
 
 const { Text } = Typography
 
-const QUICK_ENTERPRISES = ['华贸进出口集团', '远洋供应链公司', '丝路跨境贸易']
 const TAB_KEYS = ['query', 'competitor', 'partner', 'benchmark']
 
 export default function AnalysisEnterprisePage() {
@@ -43,11 +42,13 @@ export default function AnalysisEnterprisePage() {
     })
   }
 
+  const goQueryTab = () => changeTab('query')
+
   return (
     <div className="business-page">
       <div className="business-page-header">
         <h1 className="page-title">企业分析</h1>
-        <p className="page-description">信息查询 → 竞争分析 → 伙伴评估 → 标杆对比 · 洲/国家/城市三级筛选 · 支撑合作与竞争决策</p>
+        <p className="page-description">检索选用 → 动态档案 → 竞争分析 → 伙伴评估 → 标杆对比 · 支撑合作甄选与竞争决策</p>
       </div>
 
       <AnalysisWorkflowBar
@@ -61,12 +62,11 @@ export default function AnalysisEnterprisePage() {
 
       <div className="business-filter-bar">
         <Space wrap>
-          <Text>快捷企业</Text>
-          {QUICK_ENTERPRISES.map((k) => (
-            <Button key={k} size="small" type={enterpriseName === k ? 'primary' : 'default'} onClick={() => selectEnterprise(k)}>
-              {k}
-            </Button>
-          ))}
+          <Text>当前企业</Text>
+          <Text strong>{enterpriseName}</Text>
+          {activeTab !== 'query' && (
+            <Button type="link" size="small" onClick={goQueryTab}>返回检索选用</Button>
+          )}
         </Space>
         <Space wrap>
           <Button type="link" size="small" onClick={() => changeTab('query')}>查询</Button>
@@ -88,7 +88,7 @@ export default function AnalysisEnterprisePage() {
             children: (
               <EnterpriseQueryTab
                 enterpriseName={enterpriseName}
-                onEnterpriseChange={setEnterpriseName}
+                onEnterpriseChange={selectEnterprise}
                 onGoCompetitor={() => changeTab('competitor')}
                 onGoPartner={() => changeTab('partner')}
               />
@@ -100,6 +100,7 @@ export default function AnalysisEnterprisePage() {
             children: (
               <CompetitorTab
                 enterpriseName={enterpriseName}
+                onGoQuery={goQueryTab}
                 onGoPartner={() => changeTab('partner')}
               />
             ),
@@ -110,6 +111,7 @@ export default function AnalysisEnterprisePage() {
             children: (
               <PartnerTab
                 enterpriseName={enterpriseName}
+                onGoQuery={goQueryTab}
                 onGoBenchmark={() => changeTab('benchmark')}
               />
             ),
@@ -117,7 +119,12 @@ export default function AnalysisEnterprisePage() {
           {
             key: 'benchmark',
             label: <span><TrophyOutlined /> 行业标杆对比</span>,
-            children: <BenchmarkTab enterpriseName={enterpriseName} />,
+            children: (
+              <BenchmarkTab
+                enterpriseName={enterpriseName}
+                onGoQuery={goQueryTab}
+              />
+            ),
           },
         ]}
       />

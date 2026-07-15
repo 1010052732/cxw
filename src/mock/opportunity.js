@@ -134,19 +134,19 @@ export const DEFAULT_SUB_WEIGHTS = {
 
 export const SUB_INDICATOR_GROUPS = {
   market: [
-    { key: 'scale', label: '规模指标', hint: '市场总容量/SAM/SOM' },
-    { key: 'growth', label: '增长指标', hint: '历史与预测增长率' },
-    { key: 'profit', label: '利润指标', hint: '毛利率与价格弹性' },
+    { key: 'scale', label: '规模指标', hint: 'TAM/SAM/SOM 加权（40/35/25）' },
+    { key: 'growth', label: '增长指标', hint: 'CAGR/预测增长/生命周期（40/35/25）' },
+    { key: 'profit', label: '利润指标', hint: '毛利率/净利率/价格弹性（40/35/25）' },
   ],
   policy: [
-    { key: 'access', label: '准入指标', hint: '外资限制与行政许可' },
-    { key: 'cost', label: '成本指标', hint: '关税与自贸协定利用' },
-    { key: 'incentive', label: '激励指标', hint: '补贴与退税效率' },
+    { key: 'access', label: '准入指标', hint: '外资限制/行政许可/本地化（40/35/25）' },
+    { key: 'cost', label: '成本指标', hint: '关税/增值税/自贸协定（40/35/25）' },
+    { key: 'incentive', label: '激励指标', hint: '税收优惠/补贴/退税效率（35/35/30）' },
   ],
   credit: [
-    { key: 'entity', label: '主体信用', hint: '买家评级与财务' },
-    { key: 'transaction', label: '交易信用', hint: '付款与结算方式' },
-    { key: 'country', label: '国别风险', hint: '主权信用与政稳' },
+    { key: 'entity', label: '主体信用', hint: '买家评级/负债率/诉讼（45/30/25）' },
+    { key: 'transaction', label: '交易信用', hint: '付款及时率/支付方式/开证行（45/30/25）' },
+    { key: 'country', label: '国别风险', hint: '主权评级/WGI政稳/外汇管制（40/35/25）' },
   ],
 }
 

@@ -356,7 +356,7 @@ export default function DataMonitorPage() {
                       确认处理
                     </Button>
                   ),
-                  item.handled && <Tag color="success">已处理</Tag>,
+                  item.handled && <Tag key="handled" color="success">已处理</Tag>,
                 ].filter(Boolean)}
               >
                 <List.Item.Meta

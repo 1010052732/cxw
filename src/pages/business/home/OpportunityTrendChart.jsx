@@ -105,7 +105,7 @@ export default function OpportunityTrendChart({ opportunities, currentTotal }) {
                 label: {
                   position: 'top',
                   style: { fill: '#8c8c8c', fontSize: 11 },
-                  formatter: (datum) => (datum.newCount > 0 ? datum.newCount : ''),
+                  text: (datum) => (datum.newCount > 0 ? String(datum.newCount) : ''),
                 },
               },
               {

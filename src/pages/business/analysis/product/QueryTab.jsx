@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   App,
@@ -8,7 +8,6 @@ import {
   Col,
   Descriptions,
   Form,
-  Input,
   InputNumber,
   Row,
   Space,
@@ -23,20 +22,18 @@ import {
   DatabaseOutlined,
   ExportOutlined,
   LineChartOutlined,
-  OrderedListOutlined,
-  SearchOutlined,
   SwapOutlined,
 } from '@ant-design/icons'
 import {
+  PRODUCT_DIRECTORY,
   TRADE_MODE_OPTIONS,
   calcLandedCost,
   getProductDetail,
   resolveMarketCountryValue,
   resolveProductByRelatedName,
-  semanticSearchProducts,
 } from '../../../../mock/analysis'
 import { exportCsv } from '../analysisExport'
-import ProductSearchModal from './ProductSearchModal'
+import ProductSearchPanel from './ProductSearchPanel'
 
 const { Text, Paragraph } = Typography
 
@@ -69,27 +66,36 @@ export default function QueryTab({
 }) {
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const [query, setQuery] = useState(skuLabel || productName)
-  const [filters, setFilters] = useState(outerFilters || {
-    tradeMode: 'all',
-    origin: 'all',
-    targetMarket: 'all',
-    spec: '',
+  const archiveRef = useRef(null)
+
+  const [searchState, setSearchState] = useState({
+    keyword: skuLabel || productName || '',
+    hs: '',
+    filters: outerFilters || {
+      tradeMode: 'all',
+      origin: 'all',
+      targetMarket: 'all',
+      spec: '',
+    },
   })
   const [cargoValue, setCargoValue] = useState(100)
   const [compareKeys, setCompareKeys] = useState([])
-  const [listOpen, setListOpen] = useState(false)
+
+  const activeSku = useMemo(
+    () => PRODUCT_DIRECTORY.find((d) => d.name === skuLabel) || PRODUCT_DIRECTORY.find((d) => d.parent === productName || d.name === productName),
+    [skuLabel, productName],
+  )
 
   useEffect(() => {
-    setQuery(skuLabel || productName)
-  }, [skuLabel, productName])
-
-  useEffect(() => {
-    if (outerFilters) setFilters((prev) => ({ ...prev, ...outerFilters }))
-  }, [outerFilters])
+    setSearchState((prev) => ({
+      ...prev,
+      keyword: skuLabel || productName || '',
+      filters: { ...prev.filters, ...(outerFilters || {}) },
+    }))
+  }, [skuLabel, productName, outerFilters])
 
   const updateFilters = (next) => {
-    setFilters(next)
+    setSearchState((prev) => ({ ...prev, filters: next }))
     onFiltersChange?.(next)
   }
 
@@ -125,35 +131,25 @@ export default function QueryTab({
     })
   }
 
-  const openList = () => setListOpen(true)
-
-  const handleSearchClick = () => {
-    const v = query?.trim()
-    if (!v) {
-      // 空关键词：打开全量商品库列表
-      setListOpen(true)
-      return
-    }
-    const hits = semanticSearchProducts(v, filters)
-    if (!hits.length) {
-      message.warning('未匹配到商品，请调整关键词后从列表选择')
-      setListOpen(true)
-      return
-    }
-    setListOpen(true)
-    message.success(`已匹配 ${hits.length} 条商品，请在列表中选用`)
+  const handleSearch = ({ keyword, hs, filters }) => {
+    setSearchState({ keyword, hs, filters })
+    updateFilters(filters)
   }
 
-  const handleSelectFromList = (row) => {
+  const handleSelectProduct = (row, nextFilters) => {
+    if (nextFilters) updateFilters(nextFilters)
     const catalogName = row.parent || row.name
     onProductChange({
       catalogName,
       skuLabel: row.name,
       hs: row.hsCode,
-      filters: { ...filters },
+      filters: nextFilters || searchState.filters,
     })
-    setQuery(row.name)
-    message.success(`已选用「${row.name}」· HS ${row.hsDetail || row.hsCode} · 置信度 ${row.confidence}%`)
+    setSearchState((prev) => ({ ...prev, keyword: row.name }))
+    message.success(`已加载「${row.name}」档案 · HS ${row.hsDetail || row.hsCode} · 匹配度 ${row.confidence}%`)
+    requestAnimationFrame(() => {
+      archiveRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
   }
 
   const codeRows = CODE_LABELS.map(({ key, label }) => ({
@@ -162,68 +158,37 @@ export default function QueryTab({
   }))
 
   const activeFilters = [
-    filters.tradeMode !== 'all' && TRADE_MODE_LABEL[filters.tradeMode],
-    filters.origin !== 'all' && `原产地:${filters.origin}`,
-    filters.targetMarket !== 'all' && `市场:${filters.targetMarket}`,
-    filters.spec && `规格:${filters.spec}`,
+    searchState.filters.tradeMode !== 'all' && TRADE_MODE_LABEL[searchState.filters.tradeMode],
+    searchState.filters.origin !== 'all' && `原产地:${searchState.filters.origin}`,
+    searchState.filters.targetMarket !== 'all' && `市场:${searchState.filters.targetMarket}`,
+    searchState.filters.spec && `规格:${searchState.filters.spec}`,
   ].filter(Boolean)
 
   return (
     <>
-      <div className="business-panel product-query-hero">
-        <div className="product-query-steps">
-          <Tag color="processing">1. 输入/筛选</Tag>
-          <Tag color="processing">2. 列表选用</Tag>
-          <Tag color="processing">3. 查看档案与下钻分析</Tag>
-        </div>
-        <div className="business-filter-bar" style={{ marginBottom: 0, border: 'none', padding: 0, background: 'transparent' }}>
-          <Space.Compact style={{ width: 460, maxWidth: '100%' }}>
-            <Input
-              value={query}
-              placeholder="商品名称 / HS编码 / 功能描述，如：刹车片、5G路由器"
-              onChange={(e) => setQuery(e.target.value)}
-              onPressEnter={handleSearchClick}
-            />
-            <Button type="primary" icon={<SearchOutlined />} onClick={handleSearchClick}>查询</Button>
-          </Space.Compact>
-          <Space wrap>
-            <Button icon={<OrderedListOutlined />} onClick={openList}>商品库列表</Button>
-            <Button
-              icon={<CloudDownloadOutlined />}
-              onClick={() => {
-                exportCsv(`product-archive-${product.name}.csv`, ['field', 'value'], [
-                  { field: '名称', value: skuLabel || product.name },
-                  { field: '档案商品', value: product.name },
-                  { field: 'HS', value: product.codes?.hs || product.hsCode },
-                  { field: '物理属性', value: product.archive?.physical },
-                  { field: '贸易活跃度', value: product.archive?.tradeIndex },
-                ])
-                message.success('商品档案 CSV 已下载')
-              }}
-            >
-              导出
-            </Button>
-          </Space>
-        </div>
-        <Paragraph type="secondary" style={{ margin: '12px 0 0' }}>
-          查询结果以<strong>列表弹窗</strong>呈现，支持名称、HS、规格、贸易方式、原产地、目标市场组合筛选；点击「选用」加载 360° 数字档案。
-          {activeFilters.length > 0 && (
-            <span> 当前筛选：{activeFilters.map((f) => <Tag key={f} style={{ marginLeft: 4 }}>{f}</Tag>)}</span>
-          )}
-        </Paragraph>
+      <div className="product-query-steps-bar">
+        <Tag color="processing">1. 检索筛选</Tag>
+        <Tag color="processing">2. 列表选用</Tag>
+        <Tag color="processing">3. 档案下钻</Tag>
+        <Tag color="processing">4. 价格 / 供需 / 壁垒</Tag>
       </div>
 
-      <ProductSearchModal
-        open={listOpen}
-        onClose={() => setListOpen(false)}
-        initialKeyword={query}
-        initialFilters={filters}
-        activeName={productName}
-        onSelect={(row, nextFilters) => {
-          if (nextFilters) updateFilters(nextFilters)
-          handleSelectFromList(row)
-        }}
+      <ProductSearchPanel
+        appliedKeyword={searchState.keyword}
+        appliedHs={searchState.hs}
+        appliedFilters={searchState.filters}
+        activeSkuId={activeSku?.id}
+        activeSkuLabel={skuLabel}
+        onSearch={handleSearch}
+        onSelect={handleSelectProduct}
       />
+
+      {activeFilters.length > 0 && (
+        <div className="product-query-active-filters">
+          <Text type="secondary">当前筛选：</Text>
+          {activeFilters.map((f) => <Tag key={f}>{f}</Tag>)}
+        </div>
+      )}
 
       {compareKeys.length >= 2 && (
         <div className="business-panel">
@@ -247,126 +212,144 @@ export default function QueryTab({
         </div>
       )}
 
-      <Row gutter={16}>
-        <Col xs={24} lg={16}>
-          <div className="business-panel">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
-              <h3 className="business-panel-title" style={{ margin: 0 }}>
-                <DatabaseOutlined /> 360° 商品数字档案
-                {skuLabel && skuLabel !== productName && (
-                  <Tag color="blue" style={{ marginLeft: 8 }}>{skuLabel}</Tag>
-                )}
-              </h3>
-              <Space>
-                <Checkbox
-                  checked={compareKeys.includes(productName)}
-                  disabled={!compareKeys.includes(productName) && compareKeys.length >= 3}
-                  onChange={(e) => toggleCompare(productName, e.target.checked)}
-                >
-                  加入对比
-                </Checkbox>
-                <Tag color="success">每日更新 · {product.archive?.updateDate}</Tag>
-              </Space>
-            </div>
-            <Row gutter={16}>
-              <Col xs={24} md={8}>
-                <div className="product-archive-visual">
-                  <div className="product-archive-icon">{product.category?.slice(0, 2)}</div>
-                  <Text type="secondary">3D模型预览（可旋转示意）</Text>
-                  <div className="product-3d-mock" aria-hidden>
-                    <div className="product-3d-cube" />
+      <div ref={archiveRef}>
+        <Row gutter={16}>
+          <Col xs={24} lg={16}>
+            <div className="business-panel">
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
+                <h3 className="business-panel-title" style={{ margin: 0 }}>
+                  <DatabaseOutlined /> 360° 商品数字档案
+                  {skuLabel && skuLabel !== productName && (
+                    <Tag color="blue" style={{ marginLeft: 8 }}>{skuLabel}</Tag>
+                  )}
+                </h3>
+                <Space>
+                  <Checkbox
+                    checked={compareKeys.includes(productName)}
+                    disabled={!compareKeys.includes(productName) && compareKeys.length >= 3}
+                    onChange={(e) => toggleCompare(productName, e.target.checked)}
+                  >
+                    加入对比
+                  </Checkbox>
+                  <Button
+                    size="small"
+                    icon={<CloudDownloadOutlined />}
+                    onClick={() => {
+                      exportCsv(`product-archive-${product.name}.csv`, ['field', 'value'], [
+                        { field: '名称', value: skuLabel || product.name },
+                        { field: '档案商品', value: product.name },
+                        { field: 'HS', value: product.codes?.hs || product.hsCode },
+                        { field: '物理属性', value: product.archive?.physical },
+                        { field: '贸易活跃度', value: product.archive?.tradeIndex },
+                      ])
+                      message.success('商品档案 CSV 已下载')
+                    }}
+                  >
+                    导出档案
+                  </Button>
+                  <Tag color="success">每日更新 · {product.archive?.updateDate}</Tag>
+                </Space>
+              </div>
+              <Row gutter={16}>
+                <Col xs={24} md={8}>
+                  <div className="product-archive-visual">
+                    <div className="product-archive-icon">{product.category?.slice(0, 2)}</div>
+                    <Text type="secondary">3D模型预览（可旋转示意）</Text>
+                    <div className="product-3d-mock" aria-hidden>
+                      <div className="product-3d-cube" />
+                    </div>
+                    <div style={{ marginTop: 8 }}><Tag>贸易活跃度 {product.archive?.tradeIndex}</Tag></div>
                   </div>
-                  <div style={{ marginTop: 8 }}><Tag>贸易活跃度 {product.archive?.tradeIndex}</Tag></div>
-                </div>
-              </Col>
-              <Col xs={24} md={16}>
-                <Descriptions bordered column={2} size="small">
-                  <Descriptions.Item label="商品">{skuLabel || product.name}</Descriptions.Item>
-                  <Descriptions.Item label="档案归类">{product.name}</Descriptions.Item>
-                  <Descriptions.Item label="HS编码">{product.codes?.hs || product.hsCode}</Descriptions.Item>
-                  <Descriptions.Item label="10位编码">{product.codes?.hs10 || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="物理属性" span={2}>{product.archive?.physical}</Descriptions.Item>
-                  <Descriptions.Item label="10年均价">{product.archive?.priceRange?.avg} 指数</Descriptions.Item>
-                  <Descriptions.Item label="波动系数">{product.archive?.priceRange?.volatility}</Descriptions.Item>
-                </Descriptions>
-                {(product.archive?.priceHistory10y || []).length > 0 && (
+                </Col>
+                <Col xs={24} md={16}>
+                  <Descriptions bordered column={2} size="small">
+                    <Descriptions.Item label="商品">{skuLabel || product.name}</Descriptions.Item>
+                    <Descriptions.Item label="档案归类">{product.name}</Descriptions.Item>
+                    <Descriptions.Item label="HS编码">{product.codes?.hs || product.hsCode}</Descriptions.Item>
+                    <Descriptions.Item label="10位编码">{product.codes?.hs10 || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="物理属性" span={2}>{product.archive?.physical}</Descriptions.Item>
+                    <Descriptions.Item label="10年均价">{product.archive?.priceRange?.avg} 指数</Descriptions.Item>
+                    <Descriptions.Item label="波动系数">{product.archive?.priceRange?.volatility}</Descriptions.Item>
+                  </Descriptions>
+                  {(product.archive?.priceHistory10y || []).length > 0 && (
+                    <Table
+                      size="small"
+                      pagination={false}
+                      style={{ marginTop: 8 }}
+                      rowKey="year"
+                      dataSource={product.archive.priceHistory10y}
+                      columns={[
+                        { title: '年份', dataIndex: 'year', key: 'year', width: 70 },
+                        { title: '均价指数', dataIndex: 'price', key: 'price', width: 90 },
+                        { title: '贸易指数', key: 'trade', render: (_, r) => product.archive.tradeIndex10y?.find((t) => t.year === r.year)?.index ?? '—' },
+                      ]}
+                    />
+                  )}
+                </Col>
+              </Row>
+
+              <Row gutter={16} style={{ marginTop: 16 }}>
+                <Col xs={24} lg={12}>
+                  <Text strong>主要用途与应用</Text>
                   <Table
                     size="small"
                     pagination={false}
+                    rowKey="name"
                     style={{ marginTop: 8 }}
-                    rowKey="year"
-                    dataSource={product.archive.priceHistory10y}
+                    dataSource={product.archive?.applications || []}
                     columns={[
-                      { title: '年份', dataIndex: 'year', key: 'year', width: 70 },
-                      { title: '均价指数', dataIndex: 'price', key: 'price', width: 90 },
-                      { title: '贸易指数', key: 'trade', render: (_, r) => product.archive.tradeIndex10y?.find((t) => t.year === r.year)?.index ?? '—' },
+                      { title: '领域', dataIndex: 'name', key: 'name' },
+                      { title: '占比%', dataIndex: 'share', key: 'share', width: 70 },
                     ]}
                   />
-                )}
-              </Col>
-            </Row>
-
-            <Row gutter={16} style={{ marginTop: 16 }}>
-              <Col xs={24} lg={12}>
-                <Text strong>主要用途与应用</Text>
-                <Table
-                  size="small"
-                  pagination={false}
-                  rowKey="name"
-                  style={{ marginTop: 8 }}
-                  dataSource={product.archive?.applications || []}
-                  columns={[
-                    { title: '领域', dataIndex: 'name', key: 'name' },
-                    { title: '占比%', dataIndex: 'share', key: 'share', width: 70 },
-                  ]}
-                />
-              </Col>
-              <Col xs={24} lg={12}>
-                <Text strong>主要消费国/地区</Text>
-                <Table
-                  size="small"
-                  pagination={false}
-                  rowKey="country"
-                  style={{ marginTop: 8 }}
-                  dataSource={product.archive?.consumers || []}
-                  columns={[
-                    { title: '排名', dataIndex: 'rank', key: 'rank', width: 50 },
-                    {
-                      title: '国家',
-                      dataIndex: 'country',
-                      key: 'country',
-                      render: (v) => {
-                        const code = resolveMarketCountryValue(v)
-                        return code ? (
-                          <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/analysis/market?country=${code}&tab=overview`)}>
-                            {v}
-                          </Button>
-                        ) : v
+                </Col>
+                <Col xs={24} lg={12}>
+                  <Text strong>主要消费国/地区</Text>
+                  <Table
+                    size="small"
+                    pagination={false}
+                    rowKey="country"
+                    style={{ marginTop: 8 }}
+                    dataSource={product.archive?.consumers || []}
+                    columns={[
+                      { title: '排名', dataIndex: 'rank', key: 'rank', width: 50 },
+                      {
+                        title: '国家',
+                        dataIndex: 'country',
+                        key: 'country',
+                        render: (v) => {
+                          const code = resolveMarketCountryValue(v)
+                          return code ? (
+                            <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate(`/analysis/market?country=${code}&tab=overview`)}>
+                              {v}
+                            </Button>
+                          ) : v
+                        },
                       },
-                    },
-                    { title: '需求特征', dataIndex: 'feature', key: 'feature' },
-                  ]}
-                />
-              </Col>
-            </Row>
-          </div>
-        </Col>
-        <Col xs={24} lg={8}>
-          <div className="business-panel">
-            <h3 className="business-panel-title">多编码体系映射 · 一码查全球</h3>
-            <Table rowKey="system" size="small" pagination={false} dataSource={codeRows} columns={[
-              { title: '体系', dataIndex: 'system', key: 'system', width: 100 },
-              { title: '编码', dataIndex: 'code', key: 'code' },
-            ]} />
-          </div>
-          <div className="business-panel" style={{ marginTop: 16 }}>
-            <h3 className="business-panel-title">技术标准与认证</h3>
-            {(product.archive?.certifications || []).map((c) => (
-              <Tag key={c.name} color={c.type === '强制' ? 'error' : 'default'} style={{ marginBottom: 6 }}>{c.name} · {c.type}</Tag>
-            ))}
-          </div>
-        </Col>
-      </Row>
+                      { title: '需求特征', dataIndex: 'feature', key: 'feature' },
+                    ]}
+                  />
+                </Col>
+              </Row>
+            </div>
+          </Col>
+          <Col xs={24} lg={8}>
+            <div className="business-panel">
+              <h3 className="business-panel-title">多编码体系映射 · 一码查全球</h3>
+              <Table rowKey="system" size="small" pagination={false} dataSource={codeRows} columns={[
+                { title: '体系', dataIndex: 'system', key: 'system', width: 100 },
+                { title: '编码', dataIndex: 'code', key: 'code' },
+              ]} />
+            </div>
+            <div className="business-panel" style={{ marginTop: 16 }}>
+              <h3 className="business-panel-title">技术标准与认证</h3>
+              {(product.archive?.certifications || []).map((c) => (
+                <Tag key={c.name} color={c.type === '强制' ? 'error' : 'default'} style={{ marginBottom: 6 }}>{c.name} · {c.type}</Tag>
+              ))}
+            </div>
+          </Col>
+        </Row>
+      </div>
 
       <Row gutter={16}>
         <Col xs={24} lg={12}>
@@ -435,13 +418,12 @@ export default function QueryTab({
                       style={{ marginBottom: 8, padding: '6px 0', borderBottom: '1px solid #f0f0f0', cursor: mapped ? 'pointer' : 'default' }}
                       onClick={() => {
                         if (!mapped) {
-                          message.info(`${item.name} 暂未建立独立商品档案，可在商品库列表中继续检索`)
-                          setQuery(item.name.replace(/\s*HS\d+$/i, '').trim())
-                          setListOpen(true)
+                          message.info(`${item.name} 暂未建立独立商品档案，请在上方列表继续检索`)
+                          setSearchState((prev) => ({ ...prev, keyword: item.name.replace(/\s*HS\d+$/i, '').trim() }))
                           return
                         }
                         onProductChange({ catalogName: mapped, skuLabel: item.name, hs: undefined })
-                        setQuery(item.name)
+                        setSearchState((prev) => ({ ...prev, keyword: item.name }))
                         message.success(`已切换至关联商品：${mapped}`)
                       }}
                     >
@@ -494,7 +476,9 @@ export default function QueryTab({
           <Button
             icon={<ExportOutlined />}
             onClick={() => {
-              const market = filters.targetMarket !== 'all' ? resolveMarketCountryValue(filters.targetMarket) : 'germany'
+              const market = searchState.filters.targetMarket !== 'all'
+                ? resolveMarketCountryValue(searchState.filters.targetMarket)
+                : 'germany'
               navigate(`/analysis/market?country=${market || 'germany'}&tab=overview`)
             }}
           >

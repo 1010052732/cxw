@@ -6,6 +6,13 @@ import {
   matchesGeoFilter,
 } from '../../../mock/geo'
 import { SUB_INDICATOR_GROUPS } from '../../../mock/opportunity'
+import {
+  buildIndicatorDrillChildren,
+  computeDimensionScoresFromIndicators,
+  computeIndicatorScores,
+  enrichIndicatorRawData,
+  INDICATOR_DEFINITIONS,
+} from './indicatorEngine'
 
 export {
   formatGeoLocation,
@@ -54,49 +61,55 @@ export function validateCustomIndicator(preset) {
   return { valid: true, message: '' }
 }
 
-function subScoreMarket(item) {
-  return {
-    scale: Math.min(100, item.demandMatch || 80),
-    growth: Math.min(100, (item.cagr || 8) * 7),
-    profit: Math.min(100, (item.profitMargin || 15) * 4),
-  }
-}
-
-function subScorePolicy(item) {
-  return {
-    access: Math.min(100, item.channelMaturity || 70),
-    cost: Math.min(100, Math.max(0, 100 - (item.tariffLevel || 10) * 4)),
-    incentive: Math.min(100, (item.subsidyStrength || 60) * 0.9 + (item.exportRebate || 9)),
-  }
-}
-
-function subScoreCredit(item) {
-  return {
-    entity: item.buyerCreditScore || 75,
-    transaction: Math.min(100, (item.buyerCreditScore || 75) + (item.buyerCooperationYears || 0) * 3),
-    country: item.riskLevel === '低' ? 92 : item.riskLevel === '中' ? 78 : 58,
-  }
-}
-
 export function calcDimensionScores(item, subWeights) {
-  if (!subWeights) {
+  const computed = computeDimensionScoresFromIndicators(item, subWeights)
+  return {
+    marketScore: computed.marketScore,
+    policyScore: computed.policyScore,
+    creditScore: computed.creditScore,
+    indicatorScores: computed.indicatorScores,
+    marketGroups: computed.marketGroups,
+    policyGroups: computed.policyGroups,
+    creditGroups: computed.creditGroups,
+  }
+}
+
+export function getEvaluationConfig() {
+  try {
+    const weights = JSON.parse(localStorage.getItem('opportunity-eval-weights') || 'null')
+    const subWeights = JSON.parse(localStorage.getItem('opportunity-eval-sub-weights') || 'null')
     return {
-      marketScore: item.marketScore,
-      policyScore: item.policyScore,
-      creditScore: item.creditScore,
+      weights: weights?.market != null ? weights : { market: 35, policy: 30, credit: 35 },
+      subWeights: subWeights || {
+        market: { scale: 35, growth: 40, profit: 25 },
+        policy: { access: 30, cost: 35, incentive: 35 },
+        credit: { entity: 40, transaction: 35, country: 25 },
+      },
+    }
+  } catch {
+    return {
+      weights: { market: 35, policy: 30, credit: 35 },
+      subWeights: {
+        market: { scale: 35, growth: 40, profit: 25 },
+        policy: { access: 30, cost: 35, incentive: 35 },
+        credit: { entity: 40, transaction: 35, country: 25 },
+      },
     }
   }
-  const blend = (scores, weights) => {
-    let total = 0
-    Object.entries(weights).forEach(([k, w]) => {
-      total += (scores[k] || 0) * w / 100
-    })
-    return Math.round(total)
-  }
+}
+
+export function applySingleOpportunityEvaluation(item, weights = null, subWeights = null) {
+  const config = getEvaluationConfig()
+  const w = weights || config.weights
+  const sw = subWeights || config.subWeights
+  const dim = calcDimensionScores(item, sw)
+  const enriched = { ...enrichIndicatorRawData(item), ...dim }
+  const compositeScore = calcCompositeScore(enriched, w)
   return {
-    marketScore: blend(subScoreMarket(item), subWeights.market),
-    policyScore: blend(subScorePolicy(item), subWeights.policy),
-    creditScore: blend(subScoreCredit(item), subWeights.credit),
+    ...enriched,
+    score: Math.round(compositeScore),
+    compositeScore,
+    evaluatedAt: new Date().toISOString(),
   }
 }
 
@@ -176,71 +189,62 @@ export function checkThresholds(item, thresholds, weights = null, creditRatingOr
 
 export function getScoreTags(item) {
   const tags = []
-  if (item.policyFriendliness >= 85 || item.ftaCoverage >= 88) tags.push({ text: '政策红利显著', color: 'success' })
-  if (item.buyerCreditScore < 80) tags.push({ text: '信用风险偏高', color: 'error' })
-  if (item.cagr >= 12) tags.push({ text: '需求增长强劲', color: 'processing' })
-  if (item.cagr < 7) tags.push({ text: '需求增长放缓', color: 'warning' })
-  if (item.demandMatch >= 88) tags.push({ text: '需求匹配度高', color: 'blue' })
+  const ind = item.indicatorScores || computeIndicatorScores(item).scores
+  if ((ind.ftaUtilization || 0) >= 80 || (ind.taxIncentive || 0) >= 80) tags.push({ text: '政策红利显著', color: 'success' })
+  if ((ind.buyerRating || item.buyerCreditScore || 0) < 70) tags.push({ text: '信用风险偏高', color: 'error' })
+  if ((ind.cagr || 0) >= 80 || (item.cagr || 0) >= 12) tags.push({ text: '需求增长强劲', color: 'processing' })
+  if ((ind.cagr || 0) < 60 || (item.cagr || 0) < 7) tags.push({ text: '需求增长放缓', color: 'warning' })
+  if ((ind.som || 0) >= 80 || (item.demandMatch || 0) >= 88) tags.push({ text: '可获得规模可观', color: 'blue' })
   return tags
 }
 
-export function getDrillDown(item, weights, subWeights = null, customPreset = null) {
-  const buildSubChildren = (dimKey, scores, dimWeights) =>
-    (SUB_INDICATOR_GROUPS[dimKey] || []).map((g) => ({
-      key: `${dimKey}-${g.key}`,
-      title: g.label,
-      score: scores[g.key],
-      weight: dimWeights?.[g.key],
-      source: g.hint,
-    }))
+function buildDimensionDrillChildren(dimKey, subScores, subWeights, drillMap) {
+  return (SUB_INDICATOR_GROUPS[dimKey] || []).map((g) => ({
+    key: `${dimKey}-${g.key}`,
+    title: g.label,
+    score: subScores[g.key],
+    weight: subWeights?.[g.key],
+    source: g.hint,
+    children: drillMap[g.key] || [],
+  }))
+}
 
-  const marketSubs = subScoreMarket(item)
-  const policySubs = subScorePolicy(item)
-  const creditSubs = subScoreCredit(item)
+export function getDrillDown(item, weights, subWeights = null, customPreset = null) {
+  const dimComputed = calcDimensionScores(item, subWeights)
+  const subScores = {
+    market: dimComputed.marketGroups,
+    policy: dimComputed.policyGroups,
+    credit: dimComputed.creditGroups,
+  }
+  const marketDrill = buildIndicatorDrillChildren('market', item)
+  const policyDrill = buildIndicatorDrillChildren('policy', item)
+  const creditDrill = buildIndicatorDrillChildren('credit', item)
 
   const compositeNode = {
     key: 'composite',
     title: '综合得分',
-    score: calcCompositeScore(item, weights),
+    score: calcCompositeScore({ ...item, ...dimComputed }, weights),
     children: [
       {
         key: 'market',
         title: '市场需求潜力',
-        score: item.marketScore,
+        score: dimComputed.marketScore,
         weight: weights.market,
-        children: subWeights
-          ? buildSubChildren('market', marketSubs, subWeights.market)
-          : [
-              { key: 'm1', title: '市场容量/增长', score: item.cagr ? Math.min(100, item.cagr * 7) : 75, source: `CAGR ${item.cagr}%` },
-              { key: 'm2', title: '需求匹配度', score: item.demandMatch, source: '产品-需求结构匹配' },
-              { key: 'm3', title: '利润空间', score: item.profitMargin ? item.profitMargin * 4 : 70, source: `行业利润率 ${item.profitMargin}%` },
-            ],
+        children: buildDimensionDrillChildren('market', subScores.market, subWeights?.market, marketDrill),
       },
       {
         key: 'policy',
         title: '政策环境友好度',
-        score: item.policyScore,
+        score: dimComputed.policyScore,
         weight: weights.policy,
-        children: subWeights
-          ? buildSubChildren('policy', policySubs, subWeights.policy)
-          : [
-              { key: 'p1', title: '关税/FTA', score: item.ftaCoverage, source: `FTA覆盖 ${item.ftaCoverage}% · 关税 ${item.tariffLevel}%` },
-              { key: 'p2', title: '补贴/退税', score: item.subsidyStrength, source: `补贴 ${item.subsidyStrength} · 退税 ${item.exportRebate}%` },
-              { key: 'p3', title: '政策友好度', score: item.policyFriendliness, source: '综合政策指数' },
-            ],
+        children: buildDimensionDrillChildren('policy', subScores.policy, subWeights?.policy, policyDrill),
       },
       {
         key: 'credit',
         title: '交易信用安全度',
-        score: item.creditScore,
+        score: dimComputed.creditScore,
         weight: weights.credit,
-        children: subWeights
-          ? buildSubChildren('credit', creditSubs, subWeights.credit)
-          : [
-              { key: 'c1', title: '买家信用', score: item.buyerCreditScore, source: `${item.buyerCreditRating} · ${item.buyerCreditScore}分` },
-              { key: 'c2', title: '合作基础', score: Math.min(100, (item.buyerCooperationYears || 0) * 15 + 55), source: `合作 ${item.buyerCooperationYears || 0} 年` },
-              { key: 'c3', title: '国别/履约风险', score: item.riskLevel === '低' ? 92 : item.riskLevel === '中' ? 78 : 60, source: `风险等级 ${item.riskLevel}` },
-            ],
+        children: buildDimensionDrillChildren('credit', subScores.credit, subWeights?.credit, creditDrill),
       },
     ],
   }
@@ -263,7 +267,7 @@ export function evaluateOpportunities(list, weights, thresholds = null, customPr
   return [...list]
     .map((item) => {
       const dimScores = calcDimensionScores(item, subWeights)
-      const enriched = { ...item, ...dimScores }
+      const enriched = { ...enrichIndicatorRawData(item), ...dimScores }
       const compositeScore = calcCompositeScore(enriched, weights)
       const riskAdjustedScore = calcRiskAdjustedScore(enriched, weights)
       const strategicFit = calcStrategicFit(enriched)
@@ -275,6 +279,7 @@ export function evaluateOpportunities(list, weights, thresholds = null, customPr
       const resourceValue = compositeScore
       return {
         ...enriched,
+        score: Math.round(compositeScore),
         compositeScore,
         riskAdjustedScore,
         strategicFit,
@@ -286,6 +291,7 @@ export function evaluateOpportunities(list, weights, thresholds = null, customPr
         riskCoef: getRiskCoefficient(enriched),
         resourceCost: Math.max(3, Math.min(15, resourceCost)),
         resourceValue,
+        evaluatedAt: new Date().toISOString(),
       }
     })
     .sort((a, b) => b.compositeScore - a.compositeScore)
@@ -555,6 +561,8 @@ export function getRankIcon(rank) {
   if (rank === 3) return '🥉'
   return rank
 }
+
+export { INDICATOR_DEFINITIONS, computeIndicatorScores, enrichIndicatorRawData }
 
 export const OPPORTUNITY_STORAGE_KEY = 'opportunity-selected-ids'
 export const OPPORTUNITY_DETAIL_NAV_KEY = 'opportunity-detail-nav'

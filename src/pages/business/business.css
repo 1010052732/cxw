@@ -1633,6 +1633,88 @@
 .policy-graph-node-policy { color: #B32620; }
 .policy-graph-node-product { color: #1677ff; }
 .policy-graph-node-enterprise { color: #52c41a; }
+.product-query-steps-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.product-query-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.product-search-panel {
+  margin-bottom: 16px;
+}
+
+.product-search-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.product-search-filter-grid {
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.product-search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.product-search-label {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.product-search-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.product-search-table .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.product-match-cell {
+  min-width: 72px;
+}
+
+.product-match-cell .ant-progress {
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.product-hs-tag {
+  background: #fffbe6;
+  border-color: #ffe58f;
+  color: #ad6800;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+}
+
 .product-query-hero {
   margin-bottom: 16px;
 }
@@ -1946,6 +2028,14 @@
   from { transform: rotateX(20deg) rotateY(0deg); }
   to { transform: rotateX(20deg) rotateY(360deg); }
 }
+.enterprise-search-panel {
+  margin-bottom: 16px;
+}
+
+.analysis-workflow-steps {
+  margin-bottom: 4px;
+}
+
 .enterprise-graph-canvas {
   position: relative;
   min-height: 280px;
