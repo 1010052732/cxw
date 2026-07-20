@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button, Space, Tabs, Typography } from 'antd'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Alert, Tabs } from 'antd'
 import {
   ApartmentOutlined,
   BarChartOutlined,
@@ -10,6 +10,9 @@ import {
   SettingOutlined,
 } from '@ant-design/icons'
 import { useTabSearchParam } from '../../../../hooks/useTabSearchParam'
+import { loadAssessmentHandoff, handoffToResponse } from '../../../../utils/riskHandoff'
+import { getPendingAssessments, pushRiskAssessment } from '../riskStore'
+import RiskPipelineBar from '../RiskPipelineBar'
 import OverviewTab from './OverviewTab'
 import ModelTab from './ModelTab'
 import ParameterTab from './ParameterTab'
@@ -18,7 +21,6 @@ import PriorityTab from './PriorityTab'
 import QuickTab from './QuickTab'
 import '../../business.css'
 
-const { Text } = Typography
 const TAB_KEYS = ['overview', 'model', 'params', 'results', 'priority', 'quick']
 
 const defaultConfig = {
@@ -30,9 +32,42 @@ const defaultConfig = {
 
 export default function RiskAssessmentPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [activeTab, changeTab] = useTabSearchParam(TAB_KEYS, 'overview')
   const [selectedSignal, setSelectedSignal] = useState(null)
   const [assessmentConfig, setAssessmentConfig] = useState(defaultConfig)
+  const [incoming, setIncoming] = useState(null)
+
+  useEffect(() => {
+    const handoff = loadAssessmentHandoff()
+    const pending = getPendingAssessments()
+    if (handoff) {
+      const signal = {
+        id: handoff.alertId || handoff.id || `SIG-${Date.now()}`,
+        title: handoff.title,
+        type: handoff.type || '综合风险',
+        level: handoff.level || '橙色',
+        suggestedModel: handoff.suggestedModel || 'el',
+      }
+      setIncoming(handoff)
+      setSelectedSignal(signal)
+      setAssessmentConfig((c) => ({ ...c, signal, modelId: signal.suggestedModel }))
+      if (searchParams.get('from') || searchParams.get('tab') === 'model') {
+        changeTab('model')
+      }
+      return
+    }
+    if (pending[0]) {
+      const p = pending[0]
+      setSelectedSignal({
+        id: p.id,
+        title: p.title,
+        type: p.type,
+        level: p.level,
+        suggestedModel: p.suggestedModel || 'el',
+      })
+    }
+  }, [searchParams, changeTab])
 
   const goModel = (signal) => {
     if (signal) {
@@ -47,23 +82,69 @@ export default function RiskAssessmentPage() {
     changeTab('params')
   }
 
+  const goResponse = (payload = {}) => {
+    const title = payload.title || selectedSignal?.title || assessmentConfig.signal?.title || '风险评估处置'
+    pushRiskAssessment({
+      title,
+      modelId: payload.modelId || assessmentConfig.modelId,
+      modelName: payload.modelName,
+      score: payload.score,
+      level: payload.level,
+      signalId: selectedSignal?.id,
+    })
+    handoffToResponse({
+      from: payload.from || 'assessment',
+      title,
+      level: payload.level,
+      score: payload.score,
+      modelName: payload.modelName,
+      items: payload.items,
+    }, navigate)
+  }
+
   return (
     <div className="business-page">
       <div className="business-page-header">
         <h1 className="page-title">风险评估</h1>
-        <p className="page-description">模型 → 参数 → 结果展示 → 优先级排序 → 风险应对</p>
+        <p className="page-description">
+          决策中枢 · 模型选择 → 参数设置 → 结果展示 → 优先级排序 · 事中动态干预
+        </p>
       </div>
 
-      <div className="business-filter-bar">
-        <Space wrap>
-          <Text>评估流程</Text>
-          <Button type="link" size="small" onClick={() => navigate('/risk/identification')}>← 风险识别</Button>
-          <Button type="link" size="small" onClick={() => changeTab('model')}>模型</Button>
-          <Button type="link" size="small" onClick={() => changeTab('params')}>参数</Button>
-          <Button type="link" size="small" onClick={() => changeTab('results')}>结果</Button>
-          <Button type="link" size="small" onClick={() => changeTab('priority')}>排序</Button>
-          <Button type="link" size="small" onClick={() => navigate('/risk/response?tab=strategy')}>应对 →</Button>
-        </Space>
+      <RiskPipelineBar current="assess" activeLabel={
+        ({ overview: '概览', model: '模型', params: '参数', results: '结果', priority: '排序', quick: '快速' })[activeTab]
+      } />
+
+      {incoming && (
+        <Alert
+          type="info"
+          showIcon
+          closable
+          style={{ marginBottom: 16 }}
+          message="已承接风险识别预警"
+          description={`${incoming.title || ''} · 建议模型：${incoming.suggestedModel || '按向导选择'} · 请完成量化评估后推送应对`}
+        />
+      )}
+
+      <div className="assessment-pipeline" style={{ marginBottom: 16 }}>
+        {[
+          { key: 'model', label: '模型选择' },
+          { key: 'params', label: '参数设置' },
+          { key: 'results', label: '结果展示' },
+          { key: 'priority', label: '优先级' },
+        ].map((step, idx, arr) => (
+          <div key={step.key} className="assessment-pipeline-item">
+            <div
+              className={`assessment-pipeline-node${activeTab === step.key ? ' active' : ''}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => changeTab(step.key)}
+            >
+              <span>{idx + 1}</span>
+              <span>{step.label}</span>
+            </div>
+            {idx < arr.length - 1 && <span className="assessment-pipeline-arrow">→</span>}
+          </div>
+        ))}
       </div>
 
       <Tabs
@@ -78,7 +159,7 @@ export default function RiskAssessmentPage() {
                 onGoModel={goModel}
                 onGoParams={() => changeTab('params')}
                 onGoResults={() => changeTab('results')}
-                onGoResponse={() => navigate('/risk/response?tab=strategy')}
+                onGoResponse={() => goResponse({ from: 'assessment-overview' })}
               />
             ),
           },
@@ -90,7 +171,7 @@ export default function RiskAssessmentPage() {
                 initialSignal={selectedSignal}
                 onGoParams={goParams}
                 onGoResults={() => changeTab('results')}
-                onGoResponse={() => navigate('/risk/response?tab=strategy')}
+                onGoResponse={(p) => goResponse({ from: 'assessment-model', ...p })}
               />
             ),
           },
@@ -102,7 +183,7 @@ export default function RiskAssessmentPage() {
                 config={assessmentConfig}
                 onGoModel={() => changeTab('model')}
                 onGoResults={() => changeTab('results')}
-                onGoResponse={() => navigate('/risk/response?tab=strategy')}
+                onGoResponse={(p) => goResponse({ from: 'assessment-params', ...p })}
               />
             ),
           },
@@ -114,12 +195,12 @@ export default function RiskAssessmentPage() {
           {
             key: 'priority',
             label: <span><OrderedListOutlined /> 排序与优先级</span>,
-            children: <PriorityTab onGoResponse={() => navigate('/risk/response?tab=strategy&from=priority-queue')} />,
+            children: <PriorityTab onGoResponse={(p) => goResponse({ from: 'priority-queue', ...p })} />,
           },
           {
             key: 'quick',
             label: <span><ApartmentOutlined /> 快速评估</span>,
-            children: <QuickTab onGoResponse={() => navigate('/risk/response?tab=strategy&from=assessment-quick')} />,
+            children: <QuickTab onGoResponse={(p) => goResponse({ from: 'assessment-quick', ...p })} />,
           },
         ]}
       />

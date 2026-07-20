@@ -42,15 +42,15 @@ import {
   UnorderedListOutlined,
   UserAddOutlined,
 } from '@ant-design/icons'
-import { GEO_COUNTRY_MAP_POS, OPPORTUNITY_MAP_LAYERS } from '../../../../mock/geo'
+import { OPPORTUNITY_MAP_LAYERS } from '../../../../mock/geo'
 import {
   COUNTRY_OPTIONS,
   GEO_MACRO_OPTIONS,
   RISK_OPTIONS,
   STATUS_OPTIONS,
 } from '../../../../mock/opportunity'
-import MapHeatmapOverlay from '../../../../components/MapHeatmapOverlay'
 import { MAP_LAYER_META } from '../../../../utils/mapHeatmap'
+import OpportunityGeoCanvas from './OpportunityGeoCanvas'
 import { OPPORTUNITY_STORAGE_KEY, OPPORTUNITY_DETAIL_NAV_KEY } from '../utils'
 import { isFavoritedBy } from '../opportunityStore'
 import {
@@ -64,7 +64,6 @@ import {
   LIST_COLUMN_DEFS,
   MAP_DOT_METRICS,
   SORT_FIELD_OPTIONS,
-  getMapDotStyle,
   loadVisibleColumns,
   saveVisibleColumns,
 } from './listColumnConfig'
@@ -384,40 +383,15 @@ export default function OpportunityListTab({
           <Text type="secondary">{MAP_DOT_METRICS.find((m) => m.value === mapDotMetric)?.hint}</Text>
         </Space>
       </div>
-      <div className="opportunity-map-bg">
-        <GlobalOutlined className="opportunity-map-bg-icon" />
-        <MapHeatmapOverlay cells={mapHeatCells} activeLayers={mapLayers} className="opportunity-map-heatmap" />
-        {mapShowDots && sortedData.map((item, index) => {
-          const countryPos = GEO_COUNTRY_MAP_POS[item.geoCountry]
-          const jitter = ((index % 5) - 2) * 0.9
-          const left = item.mapPos?.x ?? (countryPos ? countryPos.x + jitter : 50)
-          const top = item.mapPos?.y ?? (countryPos ? countryPos.y + ((index % 3) - 1) * 0.8 : 50)
-          const dotStyle = getMapDotStyle(item, mapDotMetric)
-          return (
-            <Popover
-              key={item.id}
-              title={item.name}
-              content={(
-                <Space direction="vertical" size={4}>
-                  <Text>{formatGeoLocation(item)} · {item.country} · {item.product}</Text>
-                  <Tag color="#B32620">{item.score}分</Tag>
-                  <Tag color={getRiskColor(item.riskLevel)}>{item.riskLevel}风险</Tag>
-                  <Tag color="blue">政策 {item.policyFriendliness}%</Tag>
-                  <Text type="secondary">收益 {item.revenueRange}</Text>
-                  {item.dynamicAlert && <Tag color={getDynamicAlertColor(item.dynamicAlert.type)}>{item.dynamicAlert.message}</Tag>}
-                  <Button size="small" type="primary" onClick={() => goToDetail(item.id)}>查看详情</Button>
-                </Space>
-              )}
-            >
-              <div
-                className={`opportunity-map-dot ${item.dynamicAlert ? 'has-alert' : ''}`}
-                style={{ left: `${left}%`, top: `${top}%`, ...dotStyle }}
-                onClick={() => goToDetail(item.id)}
-              />
-            </Popover>
-          )
-        })}
-      </div>
+      <OpportunityGeoCanvas
+        items={sortedData}
+        heatCells={mapHeatCells}
+        heatmapLayers={mapLayers}
+        showDots={mapShowDots}
+        dotMetric={mapDotMetric}
+        geoMacro={filters.geoMacro}
+        onItemClick={(item) => goToDetail(item.id)}
+      />
       <div className="opportunity-map-legend">
         {mapLayers.map((key) => (
           <Tag key={key} color={MAP_LAYER_META[key]?.color || '#B32620'}>{MAP_LAYER_META[key]?.label || key}</Tag>

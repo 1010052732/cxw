@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { App, Button, Col, Descriptions, Form, Radio, Row, Space, Tag, Typography } from 'antd'
 import { Radar } from '@ant-design/charts'
 import { FileTextOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
 import {
   ASSESSMENT_ITEMS,
   calcAssessmentScore,
@@ -22,7 +21,6 @@ const defaultValues = {
 
 export default function QuickTab({ onGoResponse }) {
   const { message } = App.useApp()
-  const navigate = useNavigate()
   const [form] = Form.useForm()
   const [scores, setScores] = useState(defaultValues)
 
@@ -43,9 +41,8 @@ export default function QuickTab({ onGoResponse }) {
   }
 
   const handleGenerateReport = () => {
-    message.success('快速评估报告已生成')
-    navigate('/risk/response', { state: { from: 'assessment-quick', score: totalScore, level: riskResult.level } })
-    onGoResponse?.()
+    message.success('快速评估报告已生成，已推送应对')
+    onGoResponse?.({ score: totalScore, level: riskResult.level, title: '六维度快速评估' })
   }
 
   return (

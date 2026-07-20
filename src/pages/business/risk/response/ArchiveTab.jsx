@@ -37,7 +37,7 @@ const REGIONS = ['全部', '南美', '中东', '欧洲', '全球']
 const DEPTS = ['全部', '出口部', '物流部', '财务部', '风控部']
 const TYPES = ['全部', '信用风险', '物流风险', '汇率风险', '供应链风险']
 
-export default function ArchiveTab() {
+export default function ArchiveTab({ lifecycle }) {
   const { message } = App.useApp()
   const { filterModuleData, can, getDataRule } = useAuth()
   const [typeFilter, setTypeFilter] = useState('全部')
@@ -48,10 +48,27 @@ export default function ArchiveTab() {
   const [current, setCurrent] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+  const localArchives = useMemo(() => (lifecycle?.archives || []).map((a) => ({
+    id: a.id,
+    title: a.title,
+    type: a.type || '综合风险',
+    region: a.region || '全球',
+    dept: a.dept || '风控部',
+    status: '已关闭',
+    level: a.level || '已关闭',
+    closedAt: a.closedAt,
+    conclusion: a.conclusion,
+    lessons: a.lessons,
+    encrypted: true,
+    fromLifecycle: true,
+    attachments: ['闭环归档记录'],
+  })), [lifecycle])
+
   const archives = useMemo(() => {
     const list = searchRiskArchives({ type: typeFilter, status: statusFilter, region: regionFilter, dept: deptFilter, keyword })
-    return filterModuleData(list, 'risk', { dept: 'dept', region: 'region' })
-  }, [typeFilter, statusFilter, regionFilter, deptFilter, keyword, filterModuleData])
+    const merged = [...localArchives, ...list.filter((a) => !localArchives.some((l) => l.id === a.id))]
+    return filterModuleData(merged, 'risk', { dept: 'dept', region: 'region' })
+  }, [typeFilter, statusFilter, regionFilter, deptFilter, keyword, filterModuleData, localArchives])
 
   const handleAuditExport = () => {
     if (!can('action:risk:archive:export')) {
@@ -71,7 +88,19 @@ export default function ArchiveTab() {
   )
 
   const openArchive = (record) => {
-    setCurrent(getArchiveDetail(record.id))
+    if (record.fromLifecycle) {
+      setCurrent({
+        ...record,
+        timeline: [
+          { stage: '警报触发', time: record.closedAt, content: record.title },
+          { stage: '评估完成', time: record.closedAt, content: '量化评估已归档' },
+          { stage: '应对执行', time: record.closedAt, content: record.conclusion || '应对完成' },
+          { stage: '风险关闭', time: record.closedAt, content: record.lessons || '已关闭并沉淀经验' },
+        ],
+      })
+    } else {
+      setCurrent(getArchiveDetail(record.id))
+    }
     setDrawerOpen(true)
   }
 
@@ -179,12 +208,12 @@ export default function ArchiveTab() {
               <Descriptions.Item label="地区">{current.region}</Descriptions.Item>
               <Descriptions.Item label="部门">{current.dept}</Descriptions.Item>
               <Descriptions.Item label="关闭时间">{current.closedAt || '—'}</Descriptions.Item>
-              <Descriptions.Item label="附件">{current.attachments.join(' · ')}</Descriptions.Item>
+              <Descriptions.Item label="附件">{(current.attachments || []).join(' · ') || '—'}</Descriptions.Item>
             </Descriptions>
 
             <Title level={5}>全生命周期时间线</Title>
             <Timeline
-              items={current.timeline.map((t) => ({
+              items={(current.timeline || []).map((t) => ({
                 color: t.stage.includes('关闭') ? 'green' : t.stage.includes('警报') ? 'red' : 'blue',
                 children: (
                   <>

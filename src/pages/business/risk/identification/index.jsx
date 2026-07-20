@@ -1,16 +1,23 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Space, Tabs, Typography } from 'antd'
-import { RadarChartOutlined, BellOutlined, SettingOutlined, FundOutlined } from '@ant-design/icons'
+import { Tabs } from 'antd'
+import {
+  BellOutlined,
+  BookOutlined,
+  FundOutlined,
+  RadarChartOutlined,
+  SettingOutlined,
+} from '@ant-design/icons'
 import { useTabSearchParam } from '../../../../hooks/useTabSearchParam'
+import RiskPipelineBar from '../RiskPipelineBar'
 import OverviewTab from './OverviewTab'
 import IndicatorTab from './IndicatorTab'
 import MonitoringTab from './MonitoringTab'
 import DisplayTab from './DisplayTab'
+import CaseLibraryEmbed from './CaseLibraryEmbed'
 import '../../business.css'
 
-const { Text } = Typography
-const TAB_KEYS = ['overview', 'indicator', 'monitoring', 'display']
+const TAB_KEYS = ['overview', 'indicator', 'monitoring', 'display', 'cases']
 
 export default function RiskIdentificationPage() {
   const navigate = useNavigate()
@@ -20,23 +27,50 @@ export default function RiskIdentificationPage() {
     () => [
       {
         key: 'overview',
-        label: <span><RadarChartOutlined /> 风险识别概览</span>,
-        children: <OverviewTab onGoIndicator={() => changeTab('indicator')} onGoMonitoring={() => changeTab('monitoring')} />,
+        label: <span><RadarChartOutlined /> 识别概览</span>,
+        children: (
+          <OverviewTab
+            onGoIndicator={() => changeTab('indicator')}
+            onGoMonitoring={() => changeTab('monitoring')}
+          />
+        ),
       },
       {
         key: 'indicator',
-        label: <span><SettingOutlined /> 风险指标设置</span>,
-        children: <IndicatorTab onGoMonitoring={() => changeTab('monitoring')} onGoAssessment={() => navigate('/risk/assessment')} />,
+        label: <span><SettingOutlined /> 指标设置</span>,
+        children: (
+          <IndicatorTab
+            onGoMonitoring={() => changeTab('monitoring')}
+            onGoAssessment={() => navigate('/risk/assessment')}
+          />
+        ),
       },
       {
         key: 'monitoring',
-        label: <span><BellOutlined /> 风险监测预警</span>,
-        children: <MonitoringTab onGoResponse={() => navigate('/risk/response?tab=strategy')} onGoDisplay={() => changeTab('display')} />,
+        label: <span><BellOutlined /> 监测预警</span>,
+        children: (
+          <MonitoringTab
+            onGoResponse={() => navigate('/risk/response?tab=strategy')}
+            onGoAssessment={() => navigate('/risk/assessment?tab=model')}
+            onGoDisplay={() => changeTab('display')}
+          />
+        ),
       },
       {
         key: 'display',
-        label: <span><FundOutlined /> 风险信息展示</span>,
-        children: <DisplayTab onGoCase={() => navigate('/risk/case')} />,
+        label: <span><FundOutlined /> 信息展示</span>,
+        children: (
+          <DisplayTab
+            onGoCase={() => changeTab('cases')}
+            onGoAssessment={() => navigate('/risk/assessment')}
+            onGoResponse={() => navigate('/risk/response')}
+          />
+        ),
+      },
+      {
+        key: 'cases',
+        label: <span><BookOutlined /> 案例库</span>,
+        children: <CaseLibraryEmbed />,
       },
     ],
     [changeTab, navigate],
@@ -46,21 +80,35 @@ export default function RiskIdentificationPage() {
     <div className="business-page">
       <div className="business-page-header">
         <h1 className="page-title">风险识别</h1>
-        <p className="page-description">识别概览 → 指标设置 → 监测预警 → 信息展示 → 案例库 → 评估 → 应对</p>
+        <p className="page-description">
+          7×24 预警雷达 · 指标设置 → 监测预警 → 信息展示 → 案例沉淀 · 事前精准预判
+        </p>
       </div>
 
-      <div className="business-filter-bar">
-        <Space wrap>
-          <Text>风险防控流程</Text>
-          <Button type="link" size="small" onClick={() => changeTab('overview')}>识别概览</Button>
-          <Button type="link" size="small" onClick={() => changeTab('indicator')}>指标设置</Button>
-          <Button type="link" size="small" onClick={() => changeTab('monitoring')}>监测预警</Button>
-          <Button type="link" size="small" onClick={() => changeTab('display')}>信息展示</Button>
-          <Button type="link" size="small" onClick={() => navigate('/risk/case')}>案例库</Button>
-          <Button type="link" size="small" onClick={() => navigate('/risk/situation')}>态势感知</Button>
-          <Button type="link" size="small" onClick={() => navigate('/risk/assessment')}>风险评估</Button>
-          <Button type="link" size="small" onClick={() => navigate('/risk/response')}>风险应对</Button>
-        </Space>
+      <RiskPipelineBar current="identify" activeLabel={
+        ({ overview: '概览', indicator: '指标', monitoring: '监测', display: '展示', cases: '案例' })[activeTab]
+      } />
+
+      <div className="assessment-pipeline" style={{ marginBottom: 16 }}>
+        {[
+          { key: 'overview', label: '识别概览' },
+          { key: 'indicator', label: '指标设置' },
+          { key: 'monitoring', label: '监测预警' },
+          { key: 'display', label: '信息展示' },
+          { key: 'cases', label: '案例库' },
+        ].map((step, idx, arr) => (
+          <div key={step.key} className="assessment-pipeline-item">
+            <div
+              className={`assessment-pipeline-node${activeTab === step.key ? ' active' : ''}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => changeTab(step.key)}
+            >
+              <span>{idx + 1}</span>
+              <span>{step.label}</span>
+            </div>
+            {idx < arr.length - 1 && <span className="assessment-pipeline-arrow">→</span>}
+          </div>
+        ))}
       </div>
 
       <Tabs activeKey={activeTab} onChange={changeTab} destroyInactiveTabPane={false} items={tabItems} />

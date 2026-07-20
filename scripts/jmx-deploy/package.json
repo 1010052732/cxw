@@ -1,0 +1,13 @@
+{
+  "name": "digital-trade-intelligence-platform-deploy",
+  "private": true,
+  "version": "0.2.0",
+  "description": "数智分析平台 · 生产环境静态部署包",
+  "scripts": {
+    "start": "serve web -l 4173 --no-clipboard",
+    "start:lan": "serve web -l tcp://0.0.0.0:4173 --no-clipboard"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}

@@ -258,7 +258,57 @@
 }
 
 .opportunity-world-map {
-  min-height: 420px;
+  min-height: 480px;
+}
+
+.opportunity-amap-panel {
+  position: relative;
+}
+
+.opportunity-amap-canvas {
+  position: relative;
+  height: 460px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.opportunity-amap-container {
+  min-height: 460px;
+}
+
+.opportunity-amap-status {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.amap-opp-marker {
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.amap-opp-marker:hover {
+  transform: scale(1.25);
+}
+
+.amap-opp-marker.has-alert {
+  animation: opp-dot-pulse 1.8s ease-in-out infinite;
+}
+
+.amap-opp-cluster {
+  border-radius: 50%;
+  background: rgba(22, 119, 255, 0.85);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 10px rgba(22, 119, 255, 0.45);
 }
 
 .opportunity-map-toolbar {

@@ -21,6 +21,7 @@ import {
 import {
   AppstoreOutlined,
   FolderAddOutlined,
+  GlobalOutlined,
   HeartFilled,
   HeartOutlined,
   PlusOutlined,
@@ -28,7 +29,6 @@ import {
   SaveOutlined,
   SearchOutlined,
   StarOutlined,
-  TableOutlined,
   TagOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons'
@@ -45,10 +45,15 @@ import {
   SCHEME_OPTIONS,
   STATUS_OPTIONS,
 } from '../../../../mock/opportunity'
+import { GEO_COUNTRY_MAP_POS, OPPORTUNITY_MAP_LAYERS } from '../../../../mock/geo'
+import { aggregateOpportunityHeatCells } from '../../../../utils/mapHeatmap'
+import OpportunityGeoCanvas from '../classify/OpportunityGeoCanvas'
+import { MAP_DOT_METRICS } from '../classify/listColumnConfig'
 import { loadOpportunities } from '../opportunityStore'
 import {
   OPPORTUNITY_STORAGE_KEY,
   filterOpportunities,
+  formatGeoLocation,
   getRiskColor,
 } from '../utils'
 import '../opportunity.css'
@@ -89,6 +94,9 @@ export default function OpportunityHallPage() {
   const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS)
   const [selectedRowKeys, setSelectedRowKeys] = useState([])
   const [viewMode, setViewMode] = useState('list')
+  const [mapLayers, setMapLayers] = useState(OPPORTUNITY_MAP_LAYERS.filter((l) => l.default).map((l) => l.key))
+  const [mapShowDots, setMapShowDots] = useState(true)
+  const [mapDotMetric, setMapDotMetric] = useState('score')
   const [currentScheme, setCurrentScheme] = useState('scheme-default')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -130,6 +138,11 @@ export default function OpportunityHallPage() {
     const start = (page - 1) * pageSize
     return sortedData.slice(start, start + pageSize)
   }, [sortedData, page, pageSize])
+
+  const mapHeatCells = useMemo(
+    () => aggregateOpportunityHeatCells(sortedData, GEO_COUNTRY_MAP_POS),
+    [sortedData],
+  )
 
   const hasSelection = selectedRowKeys.length > 0
 
@@ -404,19 +417,32 @@ export default function OpportunityHallPage() {
   )
 
   const renderMapView = () => (
-    <div className="opportunity-map-grid">
-      {pageData.map((item) => (
-        <div key={item.id} className="opportunity-map-item">
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>
-            <EllipsisText text={item.country} width={160} />
-          </div>
-          <EllipsisText text={item.name} width={180} />
-          <div style={{ marginTop: 8 }}>
-            <Tag color="#B32620">{item.score} 分</Tag>
-            <Tag color={getRiskColor(item.riskLevel)}>{item.riskLevel}风险</Tag>
-          </div>
-        </div>
-      ))}
+    <div className="opportunity-world-map">
+      <div className="opportunity-map-toolbar">
+        <Space wrap size={[8, 8]}>
+          <Text type="secondary">热力图层：</Text>
+          <Checkbox.Group
+            options={OPPORTUNITY_MAP_LAYERS.map((l) => ({ value: l.key, label: l.label }))}
+            value={mapLayers}
+            onChange={setMapLayers}
+          />
+          <Checkbox checked={mapShowDots} onChange={(e) => setMapShowDots(e.target.checked)}>叠加商机散点</Checkbox>
+          <Select
+            style={{ width: 160 }}
+            value={mapDotMetric}
+            onChange={setMapDotMetric}
+            options={MAP_DOT_METRICS}
+          />
+        </Space>
+      </div>
+      <OpportunityGeoCanvas
+        items={sortedData}
+        heatCells={mapHeatCells}
+        heatmapLayers={mapLayers}
+        showDots={mapShowDots}
+        dotMetric={mapDotMetric}
+        onItemClick={(item) => navigate(`/opportunity/detail/${item.id}`)}
+      />
     </div>
   )
 
@@ -537,7 +563,7 @@ export default function OpportunityHallPage() {
           </Button>
           <Button
             type={viewMode === 'map' ? 'primary' : 'default'}
-            icon={<TableOutlined />}
+            icon={<GlobalOutlined />}
             onClick={() => setViewMode('map')}
           >
             地图视图

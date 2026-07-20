@@ -21,6 +21,7 @@ import {
   CloudDownloadOutlined,
   SearchOutlined,
 } from '@ant-design/icons'
+import RiskPipelineBar from '../RiskPipelineBar'
 import {
   CASE_ANALYSIS_REPORT,
   CASE_STRUCTURED_TEMPLATE,
@@ -86,6 +87,8 @@ export default function RiskCasePage() {
         <h1 className="page-title">风险案例库</h1>
         <p className="page-description">结构化案例沉淀 · 智能检索 · 相似推荐 · 规则优化 · 联动识别与监测</p>
       </div>
+
+      <RiskPipelineBar current="case" />
 
       <div className="business-filter-bar">
         <Space.Compact style={{ width: 280 }}>

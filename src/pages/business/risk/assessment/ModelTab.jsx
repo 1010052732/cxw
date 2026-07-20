@@ -197,8 +197,14 @@ export default function ModelTab({ initialSignal, onGoParams, onGoResults, onGoR
 
   const handleDispatch = () => {
     message.success('评估结果已推送至风险应对')
-    onGoResponse?.({ assessmentId: report?.id, level: result.level, model: activeModel?.name })
-    navigate('/risk/response', { state: { from: 'assessment', title: initialSignal?.title || '风险评估处置' } })
+    onGoResponse?.({
+      assessmentId: report?.id,
+      level: result.level,
+      score: result.score || result.totalScore,
+      modelId,
+      modelName: activeModel?.name,
+      title: initialSignal?.title || '风险评估处置',
+    })
   }
 
   const renderModelConfig = () => {

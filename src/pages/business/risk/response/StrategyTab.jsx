@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Alert,
@@ -36,6 +36,7 @@ import {
   recommendStrategies,
   scoreToGrade,
 } from '../../../../mock/risk'
+import { pushRiskResponsePlan } from '../riskStore'
 
 const { Text, Paragraph, Title } = Typography
 const typeColor = { avoid: 'blue', reduce: 'success', transfer: 'orange', accept: 'default' }
@@ -51,6 +52,10 @@ export default function StrategyTab({ incomingRisk, onGoExecution, onGoEmergency
   const [actionPlan, setActionPlan] = useState(null)
   const [selectedKris, setSelectedKris] = useState(DEFAULT_PLAN_KRIS.map((k) => k.kriId))
   const [planForm] = Form.useForm()
+
+  useEffect(() => {
+    if (incomingRisk?.title) setRiskContext(incomingRisk)
+  }, [incomingRisk])
 
   const recommendations = useMemo(
     () => recommendStrategies({
@@ -93,7 +98,15 @@ export default function StrategyTab({ incomingRisk, onGoExecution, onGoEmergency
       })
       setActionPlan(plan)
       setPlanStep(2)
-      message.success('《风险应对行动计划表》已生成，已同步日历与待办')
+      pushRiskResponsePlan({
+        id: plan.id,
+        title: riskContext.title,
+        strategyType: selectedStrategies[0]?.type || 'reduce',
+        actions: plan.actions,
+        kris: plan.kris || kris,
+        status: '执行中',
+      })
+      message.success('《风险应对行动计划表》已生成，已写入闭环档案并同步待办')
     })
   }
 

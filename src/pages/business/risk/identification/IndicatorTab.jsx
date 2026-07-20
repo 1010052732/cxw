@@ -52,6 +52,9 @@ export default function IndicatorTab({ onGoMonitoring, onGoAssessment }) {
   const [backtest, setBacktest] = useState(null)
   const [rules, setRules] = useState(DEFAULT_RULES)
 
+  const [timeWindow, setTimeWindow] = useState('30d')
+  const [versionHistory, setVersionHistory] = useState(RULE_VERSION_HISTORY)
+
   const atoms = useMemo(
     () => (category === '全部' ? RISK_INDICATOR_ATOMS : RISK_INDICATOR_ATOMS.filter((a) => a.category === category)),
     [category],
@@ -72,7 +75,28 @@ export default function IndicatorTab({ onGoMonitoring, onGoAssessment }) {
 
   const applyTemplate = (tpl) => {
     setRuleName(tpl.name)
-    message.success(`已加载模板：${tpl.name}`)
+    setLogic(tpl.logic || 'AND')
+    setSensitivity(tpl.sensitivity || 80)
+    setTimeWindow(tpl.window || '30d')
+    const loaded = (tpl.atomIds || [])
+      .map((id) => RISK_INDICATOR_ATOMS.find((a) => a.id === id))
+      .filter(Boolean)
+    setSelectedAtoms(loaded.length ? loaded : selectedAtoms)
+    message.success(`已加载模板「${tpl.name}」并注入 ${loaded.length || 0} 个指标原子`)
+  }
+
+  const applyIndustryPreset = (preset) => {
+    const maxKey = Object.entries(preset.sensitivity).find(([, v]) => v === '最高')?.[0]
+    setSensitivity(maxKey ? 95 : 80)
+    setRuleName(`${preset.label}行业敏感规则`)
+    if (preset.id === 'agri') {
+      applyTemplate(RULE_TEMPLATES.find((t) => t.id === 'tpl-policy') || RULE_TEMPLATES[0])
+    } else if (preset.id === 'electronics') {
+      setSelectedAtoms(RISK_INDICATOR_ATOMS.filter((a) => ['a6', 'a14', 'a7'].includes(a.id)))
+    } else {
+      setSelectedAtoms(RISK_INDICATOR_ATOMS.filter((a) => ['a13', 'a5', 'a9'].includes(a.id)))
+    }
+    message.success(`已应用「${preset.label}」行业敏感度预设`)
   }
 
   const handleSaveRule = () => {
@@ -80,22 +104,33 @@ export default function IndicatorTab({ onGoMonitoring, onGoAssessment }) {
       message.warning('当前角色无风险识别配置权限')
       return
     }
+    if (!selectedAtoms.length) {
+      message.warning('请先从左侧选择至少一个指标原子')
+      return
+    }
+    const ver = `v1.${rules.length}`
     setRules((prev) => [
       {
         id: `rule-${Date.now()}`,
         name: ruleName,
-        version: 'v1.0',
+        version: ver,
         status: '启用',
         level: sensitivity >= 80 ? '紧急' : sensitivity >= 60 ? '高' : '中',
         sensitivity: sensitivity >= 80 ? '高' : '中',
-        updatedAt: '2026-07-02',
+        updatedAt: new Date().toISOString().slice(0, 10),
         operator: '当前用户',
         triggers: 0,
         accuracy: '-',
+        atomCount: selectedAtoms.length,
+        window: timeWindow,
       },
       ...prev,
     ])
-    message.success('规则已保存并启用 · 版本 v1.0')
+    setVersionHistory((prev) => [
+      { version: ver, date: new Date().toISOString().slice(0, 10), operator: '当前用户', change: `新建规则 · ${selectedAtoms.length}原子 · ${logic}/${timeWindow}` },
+      ...prev,
+    ])
+    message.success(`规则已保存并启用 · ${ver} · 可进入监测预警验证`)
   }
 
   const handleBacktest = () => {
@@ -144,7 +179,11 @@ export default function IndicatorTab({ onGoMonitoring, onGoAssessment }) {
                 </Col>
                 <Col span={8}>
                   <Form.Item label="时间窗口">
-                    <Select defaultValue="30d" options={[{ value: '7d', label: '7天' }, { value: '30d', label: '30天' }, { value: '90d', label: '90天' }]} />
+                    <Select
+                      value={timeWindow}
+                      options={[{ value: '7d', label: '7天' }, { value: '30d', label: '30天' }, { value: '90d', label: '90天' }]}
+                      onChange={setTimeWindow}
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
@@ -208,7 +247,7 @@ export default function IndicatorTab({ onGoMonitoring, onGoAssessment }) {
           <div className="business-panel" style={{ marginTop: 16 }}>
             <h3 className="business-panel-title">行业敏感度预设</h3>
             {INDUSTRY_PRESETS.map((p) => (
-              <Card key={p.id} size="small" style={{ marginBottom: 8 }}>
+              <Card key={p.id} size="small" style={{ marginBottom: 8 }} hoverable onClick={() => applyIndustryPreset(p)}>
                 <Text strong>{p.label}</Text>
                 <div style={{ fontSize: 12, marginTop: 4 }}>
                   {Object.entries(p.sensitivity).map(([k, v]) => <Tag key={k}>{k}:{v}</Tag>)}
@@ -257,7 +296,7 @@ export default function IndicatorTab({ onGoMonitoring, onGoAssessment }) {
           { title: '准确率', dataIndex: 'accuracy', key: 'accuracy', width: 70, render: (v) => v === '-' ? '-' : `${v}%` },
           { title: '更新', dataIndex: 'updatedAt', key: 'updatedAt', width: 100 },
         ]} />
-        <Table rowKey="version" size="small" style={{ marginTop: 12 }} pagination={false} dataSource={RULE_VERSION_HISTORY} columns={[
+        <Table rowKey="version" size="small" style={{ marginTop: 12 }} pagination={false} dataSource={versionHistory} columns={[
           { title: '版本', dataIndex: 'version', key: 'version', width: 70 },
           { title: '时间', dataIndex: 'date', key: 'date', width: 100 },
           { title: '操作人', dataIndex: 'operator', key: 'operator', width: 80 },

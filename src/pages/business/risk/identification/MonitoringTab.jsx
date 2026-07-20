@@ -24,7 +24,8 @@ import {
   SendOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons'
-import { saveRiskHandoff } from '../../../../utils/riskHandoff'
+import { saveRiskHandoff, handoffToAssessment, handoffToResponse } from '../../../../utils/riskHandoff'
+import { pushRiskAlert } from '../riskStore'
 import {
   ALERT_LEVEL_MAP,
   findSimilarCases,
@@ -40,7 +41,7 @@ const levelTag = {
   蓝色: 'processing',
 }
 
-export default function MonitoringTab({ onGoResponse, onGoDisplay }) {
+export default function MonitoringTab({ onGoResponse, onGoDisplay, onGoAssessment }) {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const data = useMemo(() => getMonitoringData(), [])
@@ -50,14 +51,38 @@ export default function MonitoringTab({ onGoResponse, onGoDisplay }) {
   const [composite, setComposite] = useState(null)
 
   const handleConfirm = (record) => {
-    setAlerts((prev) => prev.map((a) => (a.id === record.id ? { ...a, confirmed: true } : a)))
+    setAlerts((prev) => prev.map((a) => (a.id === record.id ? { ...a, confirmed: true, status: '已确认' } : a)))
+    pushRiskAlert({ ...record, status: '已确认', source: 'monitoring' })
     message.success(`已确认 · ${record.title}`)
   }
 
+  const handleSendAssess = (record) => {
+    const payload = {
+      from: 'monitoring-alert',
+      alertId: record.id,
+      title: record.title,
+      type: record.type,
+      level: record.level,
+      suggestedModel: record.type?.includes('信用') ? 'el' : record.type?.includes('汇率') || record.type?.includes('市场') ? 'var' : 'matrix',
+    }
+    pushRiskAlert({ ...record, status: '待评估', ...payload })
+    handoffToAssessment(payload, navigate)
+    message.success('已送入风险评估 · 请选择模型量化打分')
+  }
+
   const handleDispatch = (record) => {
-    saveRiskHandoff({ from: 'monitoring-alert', alertId: record.id, title: record.title, alertTitle: record.title })
+    const payload = {
+      from: 'monitoring-alert',
+      alertId: record.id,
+      title: record.title,
+      alertTitle: record.title,
+      type: record.type,
+      level: record.level,
+    }
+    pushRiskAlert({ ...record, status: '处置中', ...payload })
+    saveRiskHandoff(payload)
+    handoffToResponse(payload, navigate)
     message.success('已推送至风险应对任务池')
-    navigate(`/risk/response?tab=strategy&from=monitoring-alert&alertId=${record.id}`)
   }
 
   const openDetail = (record) => {
@@ -125,14 +150,15 @@ export default function MonitoringTab({ onGoResponse, onGoDisplay }) {
                 {
                   title: '操作',
                   key: 'action',
-                  width: 180,
+                  width: 220,
                   render: (_, r) => (
-                    <Space size="small">
+                    <Space size="small" wrap>
                       <Button type="link" size="small" onClick={() => openDetail(r)}>详情</Button>
                       {!r.confirmed && (
                         <Button type="primary" size="small" onClick={() => handleConfirm(r)}>确认</Button>
                       )}
-                      <Button type="link" size="small" onClick={() => handleDispatch(r)}>处置</Button>
+                      <Button type="link" size="small" onClick={() => handleSendAssess(r)}>评估</Button>
+                      <Button type="link" size="small" onClick={() => handleDispatch(r)}>应对</Button>
                     </Space>
                   ),
                 },
@@ -176,6 +202,21 @@ export default function MonitoringTab({ onGoResponse, onGoDisplay }) {
             <Space wrap>
               {agg.subItems.map((s) => <Tag key={s}>{s}</Tag>)}
             </Space>
+            <div style={{ marginTop: 8 }}>
+              <Button
+                size="small"
+                type="primary"
+                onClick={() => handleSendAssess({
+                  id: agg.id,
+                  title: agg.title,
+                  level: agg.level,
+                  type: '复合风险',
+                  detail: agg.summary,
+                })}
+              >
+                聚合事件送评估
+              </Button>
+            </div>
           </Card>
         ))}
       </div>
@@ -236,6 +277,9 @@ export default function MonitoringTab({ onGoResponse, onGoDisplay }) {
           {onGoDisplay && (
             <Button icon={<NodeIndexOutlined />} onClick={onGoDisplay}>风险信息展示</Button>
           )}
+          {onGoAssessment && (
+            <Button onClick={onGoAssessment}>进入风险评估</Button>
+          )}
           {onGoResponse && (
             <Button type="primary" icon={<AlertOutlined />} onClick={onGoResponse}>进入风险应对</Button>
           )}
@@ -272,8 +316,11 @@ export default function MonitoringTab({ onGoResponse, onGoDisplay }) {
                 确认已读
               </Button>
             )}
+            <Button block type="primary" ghost style={{ marginTop: 8 }} onClick={() => { handleSendAssess(current); setDrawerOpen(false) }}>
+              送入风险评估（量化）
+            </Button>
             <Button block style={{ marginTop: 8 }} onClick={() => { handleDispatch(current); setDrawerOpen(false) }}>
-              发起风险处置
+              紧急直达风险应对
             </Button>
           </>
         )}

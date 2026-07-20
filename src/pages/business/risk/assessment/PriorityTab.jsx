@@ -20,7 +20,6 @@ import {
   RocketOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
-import { saveRiskHandoff } from '../../../../utils/riskHandoff'
 import {
   INDUSTRY_PRIORITY_PRESETS,
   PRIORITY_CRITERIA,
@@ -55,10 +54,8 @@ export default function PriorityTab({ onGoResponse }) {
 
   const handleDispatch = () => {
     const items = queue.slice(0, 3).map((q) => q.title)
-    saveRiskHandoff({ from: 'priority-queue', items, title: items[0] })
     message.success(`已按优先级队列推送 Top${optimization.allocation.length} 至风险应对`)
-    navigate('/risk/response?tab=strategy&from=priority-queue')
-    onGoResponse?.()
+    onGoResponse?.({ items, title: items[0], level: queue[0]?.level })
   }
 
   return (

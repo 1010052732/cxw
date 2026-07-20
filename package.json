@@ -1,7 +1,7 @@
 {
   "name": "digital-trade-intelligence-platform",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "preview:lan": "vite preview --host"
+    "preview:lan": "vite preview --host",
+    "pack:jmx": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pack-jmx.ps1"
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.7",

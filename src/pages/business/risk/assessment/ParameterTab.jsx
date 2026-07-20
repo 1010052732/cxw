@@ -395,7 +395,11 @@ export default function ParameterTab({ config = defaultConfig, onGoModel, onGoRe
               <Button
                 onClick={() => {
                   handleGenerateReport()
-                  navigate('/risk/response', { state: { from: 'assessment-params', title: config.signal?.title } })
+                  onGoResponse?.({
+                    title: config.signal?.title || '参数评估处置',
+                    level: result.level,
+                    from: 'assessment-params',
+                  })
                 }}
               >
                 推送至风险应对
